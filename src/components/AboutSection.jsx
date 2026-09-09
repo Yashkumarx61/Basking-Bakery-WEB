@@ -1,4 +1,5 @@
 import { Store, Award, Clock, Heart } from 'lucide-react';
+import aboutBakeryImage from '../assets/about-bakery.jpg';
 
 export default function AboutSection() {
   return (
@@ -9,8 +10,8 @@ export default function AboutSection() {
           <div className="relative">
             <div className="rounded-2xl overflow-hidden shadow-xl">
               <img
-                src="https://images.unsplash.com/photo-1556217477-d325251ece38?w=600&h=500&fit=crop"
-                alt="Inside Basking Bakery kitchen"
+                src={aboutBakeryImage}
+                alt="Fresh pastries and cakes displayed inside Basking Bakery"
                 className="w-full h-[400px] object-cover"
               />
             </div>

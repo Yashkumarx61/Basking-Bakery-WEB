@@ -2,8 +2,8 @@
 export const STORE_CONFIG = {
   name: 'Basking Bakery',
   tagline: 'Artisan Bakes & Custom Event Cakes',
-  whatsappNumber: '919999999999',
-  phoneDisplay: '+91 99999 99999',
+  whatsappNumber: '919311267246',
+  phoneDisplay: '+91 93112 67246',
   address: 'Shop 14, Amrapali Zodiac Market, Sector 120, Noida, UP 201301',
   hours: '8:00 AM – 10:00 PM (Every day)',
   fssaiLic: '22722120000123',
@@ -328,4 +328,3 @@ export const validPromoCodes = {
 
 export const cakeWeights = ['1.0 kg', '1.5 kg', '2.0 kg', '3.0 kg', '5.0+ kg'];
 export const cakeFlavors = customCakeFlavours.map((f) => f.name);
-

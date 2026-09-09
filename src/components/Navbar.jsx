@@ -3,6 +3,7 @@ import { ShoppingBag, Menu, X, MessageCircle, MapPin } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { formatPrice, getDirectWhatsAppURL } from '../utils';
 import { STORE_CONFIG } from '../data';
+import bakeryLogo from '../assets/basking-bakery-logo.png';
 
 const navLinks = [
   { label: 'Menu Catalog', href: '#menu' },
@@ -34,8 +35,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#5C3D2E] to-[#8B6F47] flex items-center justify-center text-xl shadow-md group-hover:scale-105 transition">
-              🧁
+            <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-md group-hover:scale-105 transition">
+              <img src={bakeryLogo} alt="Basking Bakery logo" className="h-full w-full object-cover" />
             </div>
             <div className="flex flex-col">
               <span className="font-display text-xl md:text-2xl font-bold text-[#2B1810] leading-tight group-hover:text-[#8B6F47] transition-colors">
