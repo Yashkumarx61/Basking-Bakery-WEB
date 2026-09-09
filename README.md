@@ -1,89 +1,113 @@
-# Basking Bakery - Direct-to-Consumer Web Application
+# Team Onboarding & Project Specification: Basking Bakery Web Platform
 
-Production-ready, responsive single-page web application for Basking Bakery, located at Amrapali Zodiac, Sector 120, Noida. Built with React, Vite, Tailwind CSS, and Lucide React icons.
+Production-ready, responsive single-page web application and containerized cloud deployment pipeline for Basking Bakery, located at Amrapali Zodiac Market, Sector 120, Noida.
 
-## Overview
+## 1. Project Mission & Core Problem Solved
 
-Basking Bakery offers fresh cakes, pastries, daily savouries, and custom event cakes for residents of Sector 120, Amrapali Zodiac, Supertech Capetown, Sector 119, and Sector 122 in Noida.
+Basking Bakery is an artisan bakery located in Amrapali Zodiac Market, Sector 120, Noida. The business aims to eliminate high food aggregator commissions (Zomato/Swiggy charging 20% to 30%) by driving direct customer orders through their dedicated web platform.
 
-This web platform provides a zero-aggregator-commission direct ordering system powered by automated WhatsApp message routing.
+To prevent user drop-off, the website operates with zero cold-start delays (avoiding hobby server sleep states). The web app delivers sub-second page loads 24/7.
 
-## Store Information
-
-- Store Name: Basking Bakery
-- Address: Shop No. 12, Amrapali Zodiac Market, Sector 120, Noida, UP - 201301
-- Operating Hours: 8:00 AM to 10:00 PM (Everyday)
-- Contact / WhatsApp Number: +91 93112 67246
-- Primary Service Area: Sector 120, Sector 119, Sector 122, Amrapali Zodiac, Supertech Capetown
-
-## Key Features
-
-1. Direct WhatsApp Ordering Engine
-   - Calculates item totals, add-ons, slot fees, and promo discounts.
-   - Formats complete order details into a single structured WhatsApp payload.
-   - Direct link integration for mobile app and web browser compatibility.
-
-2. Custom Cake Configurator
-   - Interactive selection for cake weight (0.5 kg to 3 kg), flavour, egg/eggless preferences.
-   - Custom message on cake and reference photo upload options.
-
-3. Interactive Menu & Filtering
-   - Category filtering across Cakes, Pastries, Savouries, Desserts, and Breads.
-   - Detailed product view modals with ingredients, allergens, and shelf-life metadata.
-
-4. Serviceability & Delivery Slot Manager
-   - Instant pincode validation for local society areas.
-   - Standard, Express, and Midnight delivery slot selection with dynamic fee calculation.
-
-5. Direct Social & Review Connections
-   - Clickable Google Rating card linking directly to Google Business Profile customer reviews.
-   - Direct Instagram and WhatsApp action buttons in the top announcement bar, hero section, and footer.
-
-## Tech Stack
-
-- Frontend Framework: React 18 (with Vite build tooling)
-- Styling: Tailwind CSS & Vanilla CSS Design Tokens
-- Icons: Lucide React
-- State Management: React Context API (CartContext)
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v18 or later recommended)
-- npm (v9 or later)
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Yashkumarx61/baskin-bakery.git
-   ```
-
-2. Navigate into the project directory:
-   ```bash
-   cd baskin-bakery
-   ```
-
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-5. Build for production:
-   ```bash
-   npm run build
-   ```
-
-## Project Structure
+## 2. Technology Stack & System Architecture
 
 ```
-baskin-bakery/
+[ Frontend: React 18 + Vite + Tailwind CSS ]
+            │
+            ├── Data CMS: Google Sheets via Apps Script Webhook (Live Menu & Order Logs)
+            ├── Order Dispatch: Direct WhatsApp Business Click-to-Chat API (wa.me)
+            │
+[ Container: Multi-stage Docker + Nginx Alpine ]
+            │
+[ CI/CD: GitHub Actions (Triggered on git push main / master) ]
+            │
+[ Cloud: AWS ap-south-1 (Route 53 ---> ALB ---> ECS Fargate Tasks) ]
+```
+
+### A. Frontend Layer
+- Framework: React 18 with Vite build tooling.
+- Styling: Tailwind CSS & Vanilla CSS design system using warm cream (`#FAF7F2`), dark espresso (`#2B1810`), and baked amber accents (`#C87D55`).
+- Icons: Lucide React for cart, clock, review badges, and status indicators.
+
+### B. Backend & CMS Layer (Google Sheets)
+- Google Sheets API / Google Apps Script: Acts as the live database and content management system.
+- Store management: Item availability, cake descriptions, and pricing are updated directly in a Google Sheet.
+- Dynamic Retrieval: The React frontend queries the Google Apps Script webhook URL via GET requests to retrieve live menu items with zero build rebuilds required.
+- Order Logging: Custom cake quote requests append a new row into an `Orders_Log` sheet via an asynchronous POST request.
+
+### C. Containerization
+- Docker Multi-stage Build:
+  - Stage 1 (`node:20-alpine`): Compiles JSX, TypeScript, and Tailwind CSS into minified HTML/JS/CSS assets (`/dist`).
+  - Stage 2 (`nginx:alpine`): High-performance static web server serving production assets with gzip compression, client-side route fallbacks (`try_files $uri /index.html`), and asset caching headers.
+
+### D. Cloud Infrastructure (AWS Region: ap-south-1 Mumbai)
+- AWS ECS + AWS Fargate: Runs Docker containers 24/7 without managing EC2 virtual machines, ensuring zero sleep or spin-down delays.
+- Amazon ECR (Elastic Container Registry): Private Docker container registry storing compiled images.
+- AWS Application Load Balancer (ALB): Routes web traffic, performs automated health checks (`/health`), and terminates SSL/TLS certificates.
+- AWS Certificate Manager (ACM): Auto-renewing SSL certificate providing HTTPS encryption.
+- Amazon Route 53: Links custom domain (`baskingbakery.com`) directly to the Load Balancer using an Alias A record.
+
+### E. CI/CD Workflow (GitHub Actions)
+- Local Development: Developers work locally on `localhost:5173`.
+- Automated Deployment: Pushing to `master` or `main` triggers GitHub Actions to:
+  1. Validate code build with Node 18 and 20 matrices.
+  2. Authenticate to AWS via OpenID Connect (OIDC).
+  3. Build the production Docker image with build arguments.
+  4. Push the image to Amazon ECR.
+  5. Trigger an ECS Fargate rolling deployment to gracefully swap container tasks with zero downtime.
+
+## 3. Order & Customer Journey Flow
+
+1. Browsing: Customer opens the site. The catalog loads instantly from edge cache, with real-time pricing synced from the Google Sheet.
+2. Custom Cake Studio:
+   - Step 1: Flavour Selection (Belgian Dark Truffle, Red Velvet, etc.)
+   - Step 2: Weight Selection (0.5 kg to 5.0+ kg)
+   - Step 3: Cake Style (Regular, Edible Photo Print, or 3D Fondant)
+   - Step 4: Cake Inscription & Delivery Slot (Morning, Evening, Midnight Surprise)
+   - Step 5: Live visual preview updates instantly on screen.
+3. Checkout / Dispatch:
+   - Clicking "Request Custom Quote" logs the payload into the Google Sheet and launches WhatsApp with all details pre-formatted into the chat.
+   - The bakery owner accepts payment via UPI and confirms delivery slot directly in the chat.
+
+## 4. Environment Variables & GitHub Secrets
+
+### Local Environment (`.env`)
+```env
+VITE_WHATSAPP_NUMBER=919311267246
+VITE_SHEET_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
+```
+
+### GitHub Repository Secrets (for CI/CD)
+- `AWS_ROLE_ARN`: IAM role ARN with permissions to push to ECR and deploy to ECS.
+- `AWS_ACCOUNT_ID`: 12-digit AWS account number.
+- `ECR_REPOSITORY`: Name of the ECR repository (`basking-bakery-web`).
+- `ECS_CLUSTER`: Name of the ECS Fargate cluster (`basking-bakery-cluster`).
+- `ECS_SERVICE`: Name of the active ECS service (`basking-bakery-service`).
+- `VITE_WHATSAPP_NUMBER`: Active business phone number (`919311267246`).
+- `VITE_SHEET_API_URL`: Google Apps Script deployment URL.
+
+## 5. Local Setup & Docker Commands
+
+### Run Locally with Node.js
+```bash
+npm install
+npm run dev
+```
+
+### Build Docker Container Locally
+```bash
+docker build -t basking-bakery-web:latest .
+docker run -p 8080:80 basking-bakery-web:latest
+```
+Access at `http://localhost:8080`.
+
+## 6. Project Structure
+
+```
+basking-bakery/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── deploy.yml
 ├── public/
 ├── src/
 │   ├── components/
@@ -104,13 +128,20 @@ baskin-bakery/
 │   ├── index.css
 │   ├── main.jsx
 │   └── utils.js
-├── index.html
+├── .dockerignore
+├── .env.example
+├── Dockerfile
+├── nginx.conf
 ├── package.json
 ├── README.md
-├── tailwind.config.js
+├── task-definition.json
 └── vite.config.js
 ```
 
-## License
+## 7. Timeline & Deployment Milestones
 
-MIT License. Developed for Basking Bakery, Noida.
+- Target Delivery Date: October 1, 2026.
+- Milestone 1: Dynamic Google Sheet catalog sync & working WhatsApp integration.
+- Milestone 2: Dockerfile containerization and local container verification.
+- Milestone 3: AWS ECS/ALB setup and GitHub Actions deployment pipeline verification.
+- Milestone 4: Custom domain mapping on Route 53 and final client sign-off.
