@@ -1,32 +1,28 @@
-name: CI Pipeline
+name: Build & Test
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ "master", "main" ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ "master", "main" ]
 
 jobs:
-  build-and-test:
-    name: Build and Verify
+  build:
+    name: Node.js CI (Build Verification)
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [ 18.x, 20.x ]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node-version }}
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
+      - name: Build production bundle
         run: npm run build
