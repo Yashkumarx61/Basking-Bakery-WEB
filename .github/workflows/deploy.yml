@@ -1,68 +1,49 @@
-name: AWS ECS Fargate CD Deployment Pipeline
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master ]
+  workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
+  pages: write
+  id-token: write
 
-env:
-  AWS_REGION: ap-south-1
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY || 'basking-bakery-web' }}
-  ECS_SERVICE: ${{ secrets.ECS_SERVICE || 'basking-bakery-service' }}
-  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER || 'basking-bakery-cluster' }}
-  CONTAINER_NAME: basking-bakery-web-container
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Build Docker Image and Deploy to AWS ECS Fargate
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Set up Node.js v20
+        uses: actions/setup-node@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+          node-version: 20
+          cache: 'npm'
 
-      - name: Log in to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Build, tag, and push Docker image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-          VITE_WHATSAPP_NUMBER: ${{ secrets.VITE_WHATSAPP_NUMBER }}
-          VITE_SHEET_API_URL: ${{ secrets.VITE_SHEET_API_URL }}
-        run: |
-          docker build \
-            --build-arg VITE_WHATSAPP_NUMBER="$VITE_WHATSAPP_NUMBER" \
-            --build-arg VITE_SHEET_API_URL="$VITE_SHEET_API_URL" \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: Build static assets
+        run: npm run build
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          task-definition: task-definition.json
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
+          path: './dist'
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

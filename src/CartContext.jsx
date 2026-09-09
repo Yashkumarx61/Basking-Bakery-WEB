@@ -291,6 +291,7 @@ export function CartProvider({ children }) {
         slotFee,
         discountAmount,
         grandTotal,
+        total: grandTotal,
         addItem,
         increment,
         decrement,

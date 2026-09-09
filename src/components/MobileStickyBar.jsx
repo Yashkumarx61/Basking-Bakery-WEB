@@ -3,7 +3,7 @@ import { useCart } from '../CartContext';
 import { formatPrice } from '../utils';
 
 export default function MobileStickyBar() {
-  const { itemCount, total, toggleCart } = useCart();
+  const { itemCount, grandTotal, toggleCart } = useCart();
 
   if (itemCount === 0) return null;
 
@@ -19,7 +19,7 @@ export default function MobileStickyBar() {
           </div>
           <div>
             <p className="text-xs text-bakery-warmBrown font-medium">Total Amount</p>
-            <p className="text-base font-bold text-bakery-brown">{formatPrice(total)}</p>
+            <p className="text-base font-bold text-bakery-brown">{formatPrice(grandTotal)}</p>
           </div>
         </div>
 
