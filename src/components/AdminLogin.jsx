@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, User, KeyRound, ArrowLeft, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, ArrowLeft, ShieldCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useInventory } from '../InventoryContext';
 import bakeryLogo from '../assets/basking-bakery-logo.png';
 
@@ -59,29 +59,6 @@ export default function AdminLogin({ onBackToShop }) {
           </p>
         </div>
 
-        {/* Demo Credentials Quick Filler Badge */}
-        <div className="mb-6 bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 text-xs text-amber-900">
-          <div className="flex items-center justify-between font-bold mb-1">
-            <span className="flex items-center gap-1.5 text-amber-800">
-              <KeyRound size={14} className="text-amber-600" /> Admin Credentials:
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('AdminBakery');
-                setPassword('B@kery061111');
-              }}
-              className="text-[10px] bg-amber-600 hover:bg-amber-700 text-white px-2 py-0.5 rounded font-semibold transition"
-            >
-              Auto Fill
-            </button>
-          </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] font-mono text-amber-950/90 pt-1 border-t border-amber-200/50 gap-1">
-            <span>Username: <strong>AdminBakery</strong></span>
-            <span>Password: <strong>B@kery061111</strong></span>
-          </div>
-        </div>
-
         {/* Error Alert */}
         {errorMessage && (
           <div className="mb-6 flex items-start gap-2.5 text-xs text-rose-800 bg-rose-50 border border-rose-200 p-3.5 rounded-2xl animate-shake">
@@ -105,7 +82,7 @@ export default function AdminLogin({ onBackToShop }) {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. admin"
+                placeholder="Enter username"
                 className="w-full pl-10 pr-4 py-3 bg-bakery-cream/40 border border-amber-200 rounded-xl text-sm font-medium text-[#2B1810] placeholder:text-bakery-warmBrown/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
               />
             </div>
