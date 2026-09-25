@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_WHATSAPP_NUMBER: "919311267246"
+        VITE_SHEET_API_URL: "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"
+        VITE_ADMIN_USER: "AdminBakery"
+        VITE_ADMIN_PASS: "B@kery061111"
+    container_name: basking-bakery-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

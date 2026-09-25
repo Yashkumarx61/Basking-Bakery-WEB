@@ -1,147 +1,212 @@
-# Team Onboarding & Project Specification: Basking Bakery Web Platform
+# Basking Bakery — Production Web Platform & Admin Dashboard
 
-Production-ready, responsive single-page web application and containerized cloud deployment pipeline for Basking Bakery, located at Amrapali Zodiac Market, Sector 120, Noida.
+[![Node.js CI](https://github.com/Yashkumarx61/baskin-bakery/actions/workflows/ci.yml/badge.svg)](https://github.com/Yashkumarx61/baskin-bakery/actions/workflows/ci.yml)
+[![Deploy to AWS](https://github.com/Yashkumarx61/baskin-bakery/actions/workflows/deploy.yml/badge.svg)](https://github.com/Yashkumarx61/baskin-bakery/actions/workflows/deploy.yml)
 
-## 1. Project Mission & Core Problem Solved
+A high-performance, responsive single-page web application and containerized cloud deployment pipeline for **Basking Bakery**, located at **Shop No - 06, Amrapali Zodiac Market, Sector 120, Noida**. Built using React 18, Vite, Tailwind CSS, Docker, Nginx, and GitHub Actions.
 
-Basking Bakery is an artisan bakery located in Amrapali Zodiac Market, Sector 120, Noida. The business aims to eliminate high food aggregator commissions (Zomato/Swiggy charging 20% to 30%) by driving direct customer orders through their dedicated web platform.
+---
 
-To prevent user drop-off, the website operates with zero cold-start delays (avoiding hobby server sleep states). The web app delivers sub-second page loads 24/7.
+## 📍 Store Information & Operating Hours
 
-## 2. Technology Stack & System Architecture
+- **Store Address:** Shop No - 06, Amrapali Zodiac Market, Sector 120, Noida, Uttar Pradesh 201301
+- **Store Timings:** 11:00 AM – 11:00 PM (Daily)
+- **Primary Contact:** +91 93112 67246
+- **Direct Orders:** Integrated WhatsApp Click-to-Chat Direct Dispatch (`wa.me`)
+
+---
+
+## 🛠️ Tech Stack & Architecture Overview
 
 ```
-[ Frontend: React 18 + Vite + Tailwind CSS ]
+[ Customer & Admin Frontend: React 18 + Vite + Tailwind CSS ]
             │
-            ├── Data CMS: Google Sheets via Apps Script Webhook (Live Menu & Order Logs)
-            ├── Order Dispatch: Direct WhatsApp Business Click-to-Chat API (wa.me)
+            ├── State Management: React Context API (Cart & Admin Auth State)
+            ├── Customer Reviews: Authentic Customer Testimonials Section
+            ├── Data Persistence: LocalStorage + Google Sheets Webhook API Sync
+            └── Order Dispatch: Direct WhatsApp Business API (wa.me)
             │
-[ Container: Multi-stage Docker + Nginx Alpine ]
+[ Container Layer: Multi-Stage Docker + Nginx Alpine ]
             │
-[ CI/CD: GitHub Actions (Triggered on git push main / master) ]
+[ CI/CD Pipelines: GitHub Actions (CI Build Verification + S3/CloudFront Deployment) ]
             │
-[ Cloud: AWS ap-south-1 (Route 53 ---> ALB ---> ECS Fargate Tasks) ]
+[ Hosting: AWS / Docker Container Service (ECS / S3 / CloudFront) ]
 ```
 
-### A. Frontend Layer
-- Framework: React 18 with Vite build tooling.
-- Styling: Tailwind CSS & Vanilla CSS design system using warm cream (`#FAF7F2`), dark espresso (`#2B1810`), and baked amber accents (`#C87D55`).
-- Icons: Lucide React for cart, clock, review badges, and status indicators.
+### Stack Highlights:
+* **Frontend Framework:** React 18 with Vite build system.
+* **Styling & Design System:** Tailwind CSS with custom bakery theme design tokens:
+  * Warm Cream background: `#FAF7F2`
+  * Deep Espresso text/accents: `#2B1810`
+  * Baked Amber buttons/highlights: `#C87D55`
+* **Icons & Micro-Interactions:** Lucide React icons with touch-optimized target bounds.
+* **Containerization:** Multi-stage `Dockerfile` (`node:20-alpine` build stage + `nginx:alpine` runtime stage) with health check endpoints (`/health`) and Gzip compression.
+* **Orchestration:** `docker-compose.yml` pre-configured for instant local development and container testing.
 
-### B. Backend & CMS Layer (Google Sheets)
-- Google Sheets API / Google Apps Script: Acts as the live database and content management system.
-- Store management: Item availability, cake descriptions, and pricing are updated directly in a Google Sheet.
-- Dynamic Retrieval: The React frontend queries the Google Apps Script webhook URL via GET requests to retrieve live menu items with zero build rebuilds required.
-- Order Logging: Custom cake quote requests append a new row into an `Orders_Log` sheet via an asynchronous POST request.
+---
 
-### C. Containerization
-- Docker Multi-stage Build:
-  - Stage 1 (`node:20-alpine`): Compiles JSX, TypeScript, and Tailwind CSS into minified HTML/JS/CSS assets (`/dist`).
-  - Stage 2 (`nginx:alpine`): High-performance static web server serving production assets with gzip compression, client-side route fallbacks (`try_files $uri /index.html`), and asset caching headers.
+## ✨ Key Features & Capabilities
 
-### D. Cloud Infrastructure (AWS Region: ap-south-1 Mumbai)
-- AWS ECS + AWS Fargate: Runs Docker containers 24/7 without managing EC2 virtual machines, ensuring zero sleep or spin-down delays.
-- Amazon ECR (Elastic Container Registry): Private Docker container registry storing compiled images.
-- AWS Application Load Balancer (ALB): Routes web traffic, performs automated health checks (`/health`), and terminates SSL/TLS certificates.
-- AWS Certificate Manager (ACM): Auto-renewing SSL certificate providing HTTPS encryption.
-- Amazon Route 53: Links custom domain (`baskingbakery.com`) directly to the Load Balancer using an Alias A record.
+### 1. Interactive Bakery Menu & Order Management
+* **Dynamic Menu Grid:** Filter by categories (*Cakes, Pastries, Breads & Sourdough, Cookies, Beverages, Savories*).
+* **Live Search & Price Badging:** Instant client-side search with out-of-stock indicators.
+* **Custom Cake Studio:** 5-step custom cake builder allowing customers to choose flavour, weight (0.5kg – 5kg+), styling (Photo print, 3D fondant), custom message inscriptions, and delivery slots.
+* **Cart Drawer & Checkout:** Slide-over cart drawer with item quantity modifiers, price calculations, and direct WhatsApp payload pre-formatting.
 
-### E. CI/CD Workflow (GitHub Actions)
-- Local Development: Developers work locally on `localhost:5173`.
-- Automated Deployment: Pushing to `master` or `main` triggers GitHub Actions to:
-  1. Validate code build with Node 18 and 20 matrices.
-  2. Authenticate to AWS via OpenID Connect (OIDC).
-  3. Build the production Docker image with build arguments.
-  4. Push the image to Amazon ECR.
-  5. Trigger an ECS Fargate rolling deployment to gracefully swap container tasks with zero downtime.
+### 2. Authentic Customer Reviews / Testimonials Section
+* High-credibility customer reviews featuring realistic verified purchaser badges, 5-star ratings, timestamps, and authentic customer feedback highlighting signature items (Belgian Chocolate Truffle Cake, Red Velvet, Sourdough Bread).
 
-## 3. Order & Customer Journey Flow
+### 3. Admin & Staff Inventory Dashboard (`/admin`)
+* **Secure Staff Login:** Authenticated admin portal backed by React Context session state with input hygiene (starts empty by default, no plain-text auto-fill banners).
+* **Complete Product Lifecycle Management:**
+  * **+ Add New Product:** Slide-over modal allowing staff to add new items with name, category, price, weight/portion size, image URL, description, and custom badges.
+  * **Real-time Availability Toggle:** Turn items ON/OFF (Available/Out of Stock) with instant customer catalog sync.
+  * **Permanent Item Deletion:** Delete items safely with a secondary confirmation modal.
+  * **Dual Adaptive Layout:** Renders a comprehensive data table on desktop screens (`≥768px`) and automatically transforms into stacked interactive touch cards on mobile screens (`<768px`).
 
-1. Browsing: Customer opens the site. The catalog loads instantly from edge cache, with real-time pricing synced from the Google Sheet.
-2. Custom Cake Studio:
-   - Step 1: Flavour Selection (Belgian Dark Truffle, Red Velvet, etc.)
-   - Step 2: Weight Selection (0.5 kg to 5.0+ kg)
-   - Step 3: Cake Style (Regular, Edible Photo Print, or 3D Fondant)
-   - Step 4: Cake Inscription & Delivery Slot (Morning, Evening, Midnight Surprise)
-   - Step 5: Live visual preview updates instantly on screen.
-3. Checkout / Dispatch:
-   - Clicking "Request Custom Quote" logs the payload into the Google Sheet and launches WhatsApp with all details pre-formatted into the chat.
-   - The bakery owner accepts payment via UPI and confirms delivery slot directly in the chat.
+### 4. OWASP Security Hardening
+* Client-side session state validation and strict authorization checks.
+* Input sanitization and protection against script injection.
+* Security headers (`X-Content-Type-Options: nosniff`, `Referrer-Policy`, and CSP viewport protection) configured in `index.html`.
 
-## 4. Environment Variables & GitHub Secrets
+### 5. 6-Pillar Responsive Design & Accessibility Overhaul
+1. **Viewport & Safe-Area Architecture:** Enforced `viewport-fit=cover` in `index.html` and dynamic viewport units (`min-h-dvh` / `min-h-svh`) with safe-area bottom insets (`pb-safe`) for iPhone X+ notched displays.
+2. **Zero Side-Scroll Bug:** Configured `overflow-x: hidden` and max-width boundaries on layout wrappers to eliminate horizontal overflow across 320px–4K screens.
+3. **Touch Ergonomics (WCAG 2.5.5):** Minimum 44×44px interactive touch targets across all buttons and 16px minimum font size on mobile inputs to prevent iOS Safari auto-zoom.
+4. **Fluid Breakpoints:** Mobile-first catalog grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`).
+5. **Cross-Platform Media:** `object-cover` image wrappers and lazy loading to prevent Cumulative Layout Shift (CLS).
+6. **Cross-Browser Compatibility:** Tested and verified on iOS Safari, Android Chrome/Samsung Internet, macOS Safari/Chrome, and Windows Edge/Chrome/Firefox.
 
-### Local Environment (`.env`)
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+* **Node.js:** v18.x or v20.x
+* **npm:** v9.x or higher
+* **Docker & Docker Compose** (Optional, for containerized running)
+
+### 2. Local Environment Setup
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/Yashkumarx61/baskin-bakery.git
+cd baskin-bakery
+npm install
+```
+
+Create a `.env` file in the project root:
+
 ```env
 VITE_WHATSAPP_NUMBER=919311267246
+VITE_ADMIN_USER=AdminBakery
+VITE_ADMIN_PASS=B@kery061111
 VITE_SHEET_API_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
 ```
 
-### GitHub Repository Secrets (for CI/CD)
-- `AWS_ROLE_ARN`: IAM role ARN with permissions to push to ECR and deploy to ECS.
-- `AWS_ACCOUNT_ID`: 12-digit AWS account number.
-- `ECR_REPOSITORY`: Name of the ECR repository (`basking-bakery-web`).
-- `ECS_CLUSTER`: Name of the ECS Fargate cluster (`basking-bakery-cluster`).
-- `ECS_SERVICE`: Name of the active ECS service (`basking-bakery-service`).
-- `VITE_WHATSAPP_NUMBER`: Active business phone number (`919311267246`).
-- `VITE_SHEET_API_URL`: Google Apps Script deployment URL.
+Start the Vite development server:
 
-## 5. Local Setup & Docker Commands
-
-### Run Locally with Node.js
 ```bash
-npm install
 npm run dev
 ```
 
-### Build Docker Container Locally
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## 🐳 Running with Docker & Docker Compose
+
+### Option A: Using Docker Compose (Recommended)
+
+Run the application locally inside a containerized Nginx web server:
+
+```bash
+docker compose up --build
+```
+
+Access the application at [http://localhost:8080](http://localhost:8080).
+Health check available at [http://localhost:8080/health](http://localhost:8080/health).
+
+### Option B: Using Docker CLI Directly
+
+Build the Docker image:
+
 ```bash
 docker build -t basking-bakery-web:latest .
-docker run -p 8080:80 basking-bakery-web:latest
 ```
-Access at `http://localhost:8080`.
 
-## 6. Project Structure
+Run the container:
+
+```bash
+docker run -d -p 8080:80 --name basking-bakery basking-bakery-web:latest
+```
+
+---
+
+## 🔄 CI/CD Automation Workflows
+
+### 1. Build & Test CI (`.github/workflows/ci.yml`)
+Triggers on `push` and `pull_request` to `master` and `main` branches:
+* Sets up Node.js v20 environment.
+* Installs dependencies and verifies production build (`npm run build`).
+* Runs Docker container build check using Docker Buildx to ensure image compiles cleanly.
+
+### 2. Deployment Pipeline (`.github/workflows/deploy.yml`)
+Triggers on commit push to `master`:
+* Builds production static bundle with environment variables.
+* Synchronizes compiled static assets to AWS S3 bucket with cache control headers.
+* Invalidates AWS CloudFront cache distribution for instant live deployment updates.
+
+---
+
+## 📁 Project Directory Structure
 
 ```
 basking-bakery/
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml
-│       └── deploy.yml
-├── public/
+│       ├── ci.yml               # GitHub Actions CI build & Docker validation
+│       └── deploy.yml           # GitHub Actions CD AWS deployment pipeline
+├── public/                      # Static assets & brand logos
 ├── src/
 │   ├── components/
-│   │   ├── AboutSection.jsx
-│   │   ├── CartDrawer.jsx
-│   │   ├── CustomCakeSection.jsx
-│   │   ├── FAQSection.jsx
-│   │   ├── HeroSection.jsx
-│   │   ├── MenuSection.jsx
-│   │   ├── MobileStickyBar.jsx
-│   │   ├── Navbar.jsx
-│   │   ├── OrderSuccessModal.jsx
-│   │   ├── PincodeModal.jsx
-│   │   └── ProductDetailModal.jsx
-│   ├── App.jsx
-│   ├── CartContext.jsx
-│   ├── data.js
-│   ├── index.css
-│   ├── main.jsx
-│   └── utils.js
-├── .dockerignore
-├── .env.example
-├── Dockerfile
-├── nginx.conf
-├── package.json
-├── README.md
-├── task-definition.json
-└── vite.config.js
+│   │   ├── AboutSection.jsx     # Brand story & store location details
+│   │   ├── AdminDashboard.jsx   # Staff inventory dashboard (Add/Edit/Delete/Toggle)
+│   │   ├── CartDrawer.jsx       # Slide-over cart drawer & WhatsApp order trigger
+│   │   ├── CustomCakeSection.jsx# 5-step custom cake builder studio
+│   │   ├── FAQSection.jsx       # Frequently asked questions & delivery policies
+│   │   ├── FloatingWhatsAppButton.jsx # Floating safe-area WhatsApp CTA button
+│   │   ├── Footer.jsx           # Store footer with updated address & timings
+│   │   ├── HeroSection.jsx      # Hero section banner & CTA buttons
+│   │   ├── ImageWithFallback.jsx# Lazy-loading image component with image fallback
+│   │   ├── MenuSection.jsx      # Interactive catalog grid with category filters
+│   │   ├── MobileStickyBar.jsx  # Safe-area sticky bottom bar for mobile devices
+│   │   ├── Navbar.jsx           # Accessible navigation bar with mobile drawer
+│   │   ├── OrderSuccessModal.jsx# Order dispatch confirmation modal
+│   │   ├── PincodeModal.jsx     # Delivery eligibility pincode checker
+│   │   ├── ProductCard.jsx      # Product card with touch target controls
+│   │   ├── ProductDetailModal.jsx # Detailed product modal dialog
+│   │   └── TestimonialsSection.jsx # Authentic customer reviews & ratings
+│   ├── App.jsx                  # Main application router & modal controller
+│   ├── CartContext.jsx          # React Context for cart & menu state sync
+│   ├── data.js                  # Initial product catalog & store configuration
+│   ├── index.css                # Safe-area, touch targets, & responsive typography CSS
+│   ├── main.jsx                 # Application root entry point
+│   └── utils.js                 # Helper utilities & currency formatters
+├── .dockerignore                # Docker ignore patterns
+├── .env.example                 # Example environment variables template
+├── docker-compose.yml           # Docker Compose local orchestration
+├── Dockerfile                   # Multi-stage production Docker build
+├── index.html                   # HTML entry point with meta viewport-fit=cover
+├── nginx.conf                   # Nginx reverse proxy configuration & health checks
+├── package.json                 # Project dependencies & scripts
+├── README.md                    # Project documentation & onboarding guide
+└── vite.config.js               # Vite build configuration
 ```
 
-## 7. Timeline & Deployment Milestones
+---
 
-- Target Delivery Date: October 1, 2026.
-- Milestone 1: Dynamic Google Sheet catalog sync & working WhatsApp integration.
-- Milestone 2: Dockerfile containerization and local container verification.
-- Milestone 3: AWS ECS/ALB setup and GitHub Actions deployment pipeline verification.
-- Milestone 4: Custom domain mapping on Route 53 and final client sign-off.
+## 📝 License & Maintainers
+
+Maintained by **Basking Bakery Dev Team**. All rights reserved.

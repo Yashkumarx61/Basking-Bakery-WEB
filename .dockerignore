@@ -6,3 +6,8 @@ dist
 .env.local
 *.log
 README.md
+docker-compose.yml
+.vscode
+.idea
+coverage
+
