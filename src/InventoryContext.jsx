@@ -59,8 +59,30 @@ export function InventoryProvider({ children }) {
     }, 3500);
   }, []);
 
-  // Periodic Session Expiry Checking
+  // Periodic Session Expiry Checking & Storage Listener for Multi-tab / View Sync
   useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === INVENTORY_STORAGE_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setProducts(parsed);
+          }
+        } catch (err) {
+          console.error('Failed to sync inventory from storage event:', err);
+        }
+      }
+    };
+
+    const handleCustomSync = (e) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setProducts(e.detail);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('inventory_updated', handleCustomSync);
+
     const interval = setInterval(() => {
       if (adminUser && adminUser.expiresAt && Date.now() >= adminUser.expiresAt) {
         setAdminUser(null);
@@ -69,14 +91,19 @@ export function InventoryProvider({ children }) {
       }
     }, 30000); // Check every 30s
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('inventory_updated', handleCustomSync);
+    };
   }, [adminUser, showToast]);
 
-  // Sync products state to localStorage
+  // Sync products state to localStorage & broadcast event for live customer sync
   const saveProductsToStorage = (newProducts) => {
     setProducts(newProducts);
     try {
       localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(newProducts));
+      window.dispatchEvent(new CustomEvent('inventory_updated', { detail: newProducts }));
     } catch (e) {
       console.error('Failed to save inventory to localStorage:', e);
     }

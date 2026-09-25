@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { X, Star, Leaf, ShoppingCart, ShieldCheck, Clock, AlertCircle, Minus, Plus } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { useInventory } from '../InventoryContext';
 import { formatPrice } from '../utils';
 import ImageWithFallback from './ImageWithFallback';
 
 export default function ProductDetailModal() {
   const { productModalData, closeProductModal, addItem, increment, decrement, getItemQuantity } = useCart();
+  const { products } = useInventory();
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
 
   useEffect(() => {
@@ -24,8 +26,9 @@ export default function ProductDetailModal() {
 
   if (!productModalData) return null;
 
-  const product = productModalData;
-  const variant = product.variants[selectedVariantIdx] || product.variants[0];
+  // Look up live product from Inventory Context so any staff edits/deletions update immediately
+  const product = products.find((p) => p.id === productModalData.id) || productModalData;
+  const variant = product.variants?.[selectedVariantIdx] || product.variants?.[0] || { label: '1 Portion', price: 0 };
   const qty = getItemQuantity(product.id, variant.label);
 
   return (

@@ -20,6 +20,7 @@ import {
   Check,
 } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { useInventory } from '../InventoryContext';
 import { crossSellAddons, deliverySlots, serviceabilityData } from '../data';
 import { formatPrice, buildOrderWhatsAppURL } from '../utils';
 import ImageWithFallback from './ImageWithFallback';
@@ -59,6 +60,7 @@ export default function CartDrawer() {
     setOrderSuccess,
     clearCart,
   } = useCart();
+  const { products } = useInventory();
 
   useEffect(() => {
     if (isOpen) {
@@ -133,8 +135,13 @@ export default function CartDrawer() {
     window.open(url, '_blank');
   };
 
-  const canProceed = items.length > 0;
-  const canSend = customer.name && selectedLocation;
+  const hasSoldOutItems = items.some((i) => {
+    const p = products.find((prod) => prod.id === i.productId);
+    return p && p.isAvailable === false;
+  });
+
+  const canProceed = items.length > 0 && !hasSoldOutItems;
+  const canSend = customer.name && selectedLocation && !hasSoldOutItems;
 
   if (!isOpen) return null;
 
@@ -202,28 +209,42 @@ export default function CartDrawer() {
                 <div className="space-y-4">
                   {/* Cart Items List */}
                   <div className="space-y-3">
-                    {items.map((item) => (
-                      <div
-                        key={item.key}
-                        className="bg-white rounded-2xl p-4 shadow-sm border border-amber-100 flex gap-3.5"
-                      >
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 rounded-xl object-cover shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-sm text-[#2B1810] truncate">
-                            {item.name}
-                          </h4>
-                          <p className="text-[11px] text-[#8B6F47]">
-                            {item.variantLabel} · {formatPrice(item.price)} each
-                          </p>
-                          {item.customMessage && (
-                            <p className="text-[10px] italic text-amber-900 bg-amber-50 px-2 py-0.5 rounded mt-1">
-                              Msg: &quot;{item.customMessage}&quot;
+                    {items.map((item) => {
+                      const liveProd = products.find((p) => p.id === item.productId);
+                      const isSoldOut = liveProd && liveProd.isAvailable === false;
+                      const currentPrice = liveProd?.variants?.find((v) => v.label === item.variantLabel)?.price || item.price;
+
+                      return (
+                        <div
+                          key={item.key}
+                          className={`bg-white rounded-2xl p-4 shadow-sm border transition-all flex gap-3.5 ${
+                            isSoldOut ? 'border-rose-300 bg-rose-50/40' : 'border-amber-100'
+                          }`}
+                        >
+                          <img
+                            src={liveProd?.image || item.image}
+                            alt={item.name}
+                            className={`w-16 h-16 rounded-xl object-cover shrink-0 ${isSoldOut ? 'opacity-60 grayscale' : ''}`}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <h4 className="font-bold text-sm text-[#2B1810] truncate">
+                                {liveProd?.name || item.name}
+                              </h4>
+                              {isSoldOut && (
+                                <span className="bg-rose-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                                  Sold Out
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-[#8B6F47]">
+                              {item.variantLabel} · {formatPrice(currentPrice)} each
                             </p>
-                          )}
+                            {item.customMessage && (
+                              <p className="text-[10px] italic text-amber-900 bg-amber-50 px-2 py-0.5 rounded mt-1">
+                                Msg: &quot;{item.customMessage}&quot;
+                              </p>
+                            )}
 
                           <div className="flex items-center justify-between mt-2.5">
                             <div className="flex items-center gap-2 bg-[#FAF7F2] rounded-full px-1.5 py-0.5 border border-amber-200">
@@ -258,7 +279,8 @@ export default function CartDrawer() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
 
                   {/* Smart Cross-Sell Celebration Addons */}
