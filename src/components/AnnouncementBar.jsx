@@ -29,7 +29,7 @@ export default function AnnouncementBar() {
           </div>
           <div className="flex items-center gap-1.5 text-bakery-cream">
             <Clock size={13} className="text-amber-400" />
-            <span>Open: <strong>8:00 AM – 10:00 PM</strong></span>
+            <span>Open: <strong>11:00 AM – 11:00 PM</strong></span>
           </div>
         </div>
 

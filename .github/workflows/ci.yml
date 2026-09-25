@@ -1,4 +1,4 @@
-name: Build & Test
+name: Build & Test CI
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js v20
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -25,4 +25,8 @@ jobs:
         run: npm ci
 
       - name: Build production bundle
+        env:
+          VITE_ADMIN_USER: ${{ secrets.VITE_ADMIN_USER || 'AdminBakery' }}
+          VITE_ADMIN_PASS: ${{ secrets.VITE_ADMIN_PASS || 'B@kery061111' }}
+          VITE_WHATSAPP_NUMBER: '919311267246'
         run: npm run build

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, X, CheckCircle2, ShieldAlert, Sparkles, Truck } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { serviceabilityData } from '../data';
@@ -13,6 +13,20 @@ export default function PincodeModal() {
 
   const [inputPincode, setInputPincode] = useState('');
   const [pincodeStatus, setPincodeStatus] = useState(null); // null | 'success' | 'error'
+
+  useEffect(() => {
+    if (pincodeModalOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') closePincodeModal();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [pincodeModalOpen, closePincodeModal]);
 
   if (!pincodeModalOpen) return null;
 

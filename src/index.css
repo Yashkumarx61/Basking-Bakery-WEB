@@ -15,12 +15,39 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   body {
     font-family: 'Inter', sans-serif;
     background-color: #FAF7F2;
     color: #2B1810;
+    width: 100%;
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Prevent iOS Safari 16px input auto-zoom bug on mobile viewports */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="url"],
+    input[type="search"],
+    input[type="tel"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }
 
@@ -42,12 +69,21 @@
     @apply bg-gradient-to-r from-[#C4956A] to-[#E8D5B7] text-[#2B1810] font-semibold py-3 px-6 rounded-full hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300;
   }
 
+  .btn-gold {
+    @apply bg-gradient-to-r from-amber-400 to-amber-500 text-[#2B1810] font-bold py-3 px-6 rounded-full hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300;
+  }
+
   .btn-whatsapp {
     @apply bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-full hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300;
   }
 
   .section-title {
     @apply font-display text-3xl md:text-4xl font-bold text-[#2B1810];
+  }
+
+  /* Safe Area Inset helper for mobile notches */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
   }
 }
 

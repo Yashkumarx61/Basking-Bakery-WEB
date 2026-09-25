@@ -1,30 +1,50 @@
 import { useState } from 'react';
-import { Minus, Plus, ShoppingCart, Leaf, Eye, Star } from 'lucide-react';
+import { Minus, Plus, ShoppingCart, Leaf, Eye, Star, AlertCircle } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { formatPrice } from '../utils';
+import ImageWithFallback from './ImageWithFallback';
 
 export default function ProductCard({ product }) {
   const { addItem, increment, decrement, getItemQuantity, openProductModal } = useCart();
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
 
+  const isAvailable = product.isAvailable !== false;
   const variant = product.variants[selectedVariantIdx] || product.variants[0];
   const qty = getItemQuantity(product.id, variant.label);
 
   return (
-    <div className="group bg-white rounded-3xl card-shadow hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-amber-100/60">
+    <div
+      className={`group bg-white rounded-3xl card-shadow hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col border border-amber-100/60 relative ${
+        !isAvailable ? 'opacity-80 bg-slate-50/50' : ''
+      }`}
+    >
       {/* Image & Badges */}
       <div className="relative overflow-hidden cursor-pointer" onClick={() => openProductModal(product)}>
-        <img
+        <ImageWithFallback
           src={product.image}
           alt={product.name}
-          className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500"
+          className={`w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500 ${
+            !isAvailable ? 'grayscale-[40%]' : ''
+          }`}
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <span className="bg-white/90 backdrop-blur-md text-[#2B1810] text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-            <Eye size={14} /> Quick View
-          </span>
-        </div>
+
+        {/* Sold Out Dark Overlay Badge */}
+        {!isAvailable && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] flex items-center justify-center">
+            <span className="bg-rose-700 text-white text-xs font-extrabold uppercase px-4 py-1.5 rounded-full shadow-lg border border-rose-400 flex items-center gap-1.5 tracking-wider">
+              <AlertCircle size={14} /> Sold Out
+            </span>
+          </div>
+        )}
+
+        {isAvailable && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <span className="bg-white/90 backdrop-blur-md text-[#2B1810] text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+              <Eye size={14} /> Quick View
+            </span>
+          </div>
+        )}
 
         {/* Dietary & Rating Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
@@ -36,7 +56,7 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {product.bestSeller && (
+        {product.bestSeller && isAvailable && (
           <span className="absolute top-3 right-3 bg-amber-400 text-[#2B1810] text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
             ⭐ BEST SELLER
           </span>
@@ -93,12 +113,19 @@ export default function ProductCard({ product }) {
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-amber-100/60">
           <div>
             <span className="text-xs text-bakery-warmBrown block text-[10px]">Price</span>
-            <span className="text-xl font-bold text-[#2B1810]">
+            <span className={`text-xl font-bold ${isAvailable ? 'text-[#2B1810]' : 'text-slate-400 line-through'}`}>
               {formatPrice(variant.price)}
             </span>
           </div>
 
-          {qty === 0 ? (
+          {!isAvailable ? (
+            <button
+              disabled
+              className="bg-slate-200 text-slate-500 text-xs font-bold px-4 py-2.5 rounded-full cursor-not-allowed border border-slate-300"
+            >
+              Sold Out
+            </button>
+          ) : qty === 0 ? (
             <button
               onClick={() => addItem(product, variant)}
               className="flex items-center gap-1.5 bg-[#5C3D2E] hover:bg-[#8B6F47] text-white text-xs font-semibold px-4 py-2.5 rounded-full transition-all duration-300 hover:shadow-md active:scale-95"

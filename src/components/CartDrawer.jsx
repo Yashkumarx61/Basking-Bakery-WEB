@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X,
   Minus,
@@ -22,6 +22,7 @@ import {
 import { useCart } from '../CartContext';
 import { crossSellAddons, deliverySlots, serviceabilityData } from '../data';
 import { formatPrice, buildOrderWhatsAppURL } from '../utils';
+import ImageWithFallback from './ImageWithFallback';
 
 const initialCustomer = {
   name: '',
@@ -58,6 +59,20 @@ export default function CartDrawer() {
     setOrderSuccess,
     clearCart,
   } = useCart();
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') closeCart();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, closeCart]);
 
   const [customer, setCustomer] = useState(initialCustomer);
   const [step, setStep] = useState('cart'); // 'cart' | 'checkout'

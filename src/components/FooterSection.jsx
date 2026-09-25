@@ -4,6 +4,7 @@ import {
   Clock,
   ExternalLink,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { STORE_CONFIG, WHATSAPP_NUMBER, INSTAGRAM_URL, GOOGLE_REVIEWS_URL } from '../data';
 import { getDirectWhatsAppURL } from '../utils';
@@ -33,7 +34,7 @@ function BrandLogo({ name }) {
   );
 }
 
-export default function FooterSection() {
+export default function FooterSection({ onOpenAdmin }) {
   return (
     <footer id="contact" className="bg-bakery-brown text-white pt-16 pb-28 md:pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -54,7 +55,7 @@ export default function FooterSection() {
             {/* FSSAI Badge */}
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/15 text-xs font-medium text-bakery-rose/90">
               <ShieldCheck size={16} className="text-amber-400" />
-              <span>FSSAI Lic. No: <strong>22722120000123</strong></span>
+              <span>FSSAI Lic. No: <strong>{STORE_CONFIG.fssaiLic}</strong></span>
             </div>
           </div>
 
@@ -64,7 +65,7 @@ export default function FooterSection() {
               Quick Links
             </h3>
             <ul className="space-y-2.5 text-sm text-bakery-rose/80">
-              {['Menu', 'Custom Cakes', 'About', 'Contact'].map((item) => (
+              {['Menu', 'Custom Cakes', 'Reviews', 'About', 'Contact'].map((item) => (
                 <li key={item}>
                   <a
                     href={`#${item.toLowerCase().replace(' ', '-')}`}
@@ -86,12 +87,12 @@ export default function FooterSection() {
               <li className="flex items-start gap-2.5">
                 <MapPin size={18} className="text-amber-400 shrink-0 mt-0.5" />
                 <span>
-                  Shop 14, Amrapali Zodiac Market, Sector 120, Noida, UP 201301
+                  {STORE_CONFIG.address}
                 </span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Clock size={18} className="text-amber-400 shrink-0" />
-                <span>8:00 AM – 10:00 PM (Every day)</span>
+                <span>{STORE_CONFIG.hours}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone size={18} className="text-amber-400 shrink-0" />
@@ -130,7 +131,7 @@ export default function FooterSection() {
               >
                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                   <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg> Instagram
+                  </svg> Instagram
               </a>
               <a
                 href="https://swiggy.com"
@@ -171,10 +172,23 @@ export default function FooterSection() {
           </div>
         </div>
 
-        {/* Copyright */}
+        {/* Copyright & Discrete Staff Portal Link */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-bakery-rose/60 gap-4 text-center sm:text-left">
           <p>© {new Date().getFullYear()} Basking Bakery. All rights reserved.</p>
-          <p>Designed for Sector 120 Noida Residents · Zero Aggregator Commission</p>
+          <div className="flex items-center gap-4">
+            <p>Designed for Sector 120 Noida Residents · Zero Aggregator Commission</p>
+            <button
+              onClick={() => {
+                if (onOpenAdmin) onOpenAdmin();
+                else window.location.href = '/admin';
+              }}
+              className="inline-flex items-center gap-1 text-[11px] text-amber-200/50 hover:text-amber-300 transition-colors bg-white/5 hover:bg-white/15 px-2.5 py-1 rounded-full border border-white/10"
+              title="Bakery Staff Inventory & Management Portal"
+            >
+              <Lock size={11} className="text-amber-400" />
+              <span>Staff Login</span>
+            </button>
+          </div>
         </div>
       </div>
     </footer>

@@ -23,6 +23,10 @@ jobs:
         run: npm ci
 
       - name: Build static assets
+        env:
+          VITE_ADMIN_USER: ${{ secrets.VITE_ADMIN_USER || 'AdminBakery' }}
+          VITE_ADMIN_PASS: ${{ secrets.VITE_ADMIN_PASS || 'B@kery061111' }}
+          VITE_WHATSAPP_NUMBER: '919311267246'
         run: npm run build
 
       - name: Configure AWS credentials
@@ -40,4 +44,3 @@ jobs:
         if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID != '' }}
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
-

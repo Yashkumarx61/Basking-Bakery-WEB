@@ -1,11 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Star, Leaf, ShoppingCart, ShieldCheck, Clock, AlertCircle, Minus, Plus } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { formatPrice } from '../utils';
+import ImageWithFallback from './ImageWithFallback';
 
 export default function ProductDetailModal() {
   const { productModalData, closeProductModal, addItem, increment, decrement, getItemQuantity } = useCart();
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
+
+  useEffect(() => {
+    if (productModalData) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') closeProductModal();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [productModalData, closeProductModal]);
 
   if (!productModalData) return null;
 
@@ -18,11 +33,17 @@ export default function ProductDetailModal() {
       <div
         className="fixed inset-0 bg-black/60 z-50 overlay backdrop-blur-sm"
         onClick={closeProductModal}
+        aria-hidden="true"
       />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] sm:w-[600px] max-h-[90vh] bg-white rounded-3xl z-50 shadow-2xl overflow-y-auto cart-scroll animate-fade-in border border-amber-100">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-detail-title"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[92%] sm:w-[600px] max-h-[90vh] bg-white rounded-3xl z-50 shadow-2xl overflow-y-auto cart-scroll animate-fade-in border border-amber-100"
+      >
         {/* Header Image */}
         <div className="relative h-64 sm:h-72 overflow-hidden bg-bakery-cream">
-          <img
+          <ImageWithFallback
             src={product.image}
             alt={product.name}
             className="w-full h-full object-cover"
@@ -114,10 +135,19 @@ export default function ProductDetailModal() {
           <div className="flex items-center justify-between pt-4 border-t border-amber-100">
             <div>
               <span className="text-xs text-bakery-warmBrown font-medium block">Total Price</span>
-              <span className="text-2xl font-bold text-bakery-brown">{formatPrice(variant.price)}</span>
+              <span className={`text-2xl font-bold ${product.isAvailable !== false ? 'text-bakery-brown' : 'text-slate-400 line-through'}`}>
+                {formatPrice(variant.price)}
+              </span>
             </div>
 
-            {qty === 0 ? (
+            {product.isAvailable === false ? (
+              <button
+                disabled
+                className="bg-slate-200 text-slate-500 font-bold text-sm px-6 py-3 rounded-full cursor-not-allowed border border-slate-300"
+              >
+                Currently Out of Stock
+              </button>
+            ) : qty === 0 ? (
               <button
                 onClick={() => addItem(product, variant)}
                 className="btn-primary flex items-center gap-2 text-sm px-6 py-3"

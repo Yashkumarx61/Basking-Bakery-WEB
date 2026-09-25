@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
 import { Filter, Leaf, Sparkles } from 'lucide-react';
-import { products, categories } from '../data';
+import { categories } from '../data';
+import { useInventory } from '../InventoryContext';
 import ProductCard from './ProductCard';
 
 export default function MenuSection() {
+  const { products } = useInventory();
   const [activeCategory, setActiveCategory] = useState('all');
   const [egglessOnly, setEgglessOnly] = useState(false);
 
@@ -14,7 +16,7 @@ export default function MenuSection() {
       const dietaryMatch = !egglessOnly || p.isEggless;
       return categoryMatch && dietaryMatch;
     });
-  }, [activeCategory, egglessOnly]);
+  }, [products, activeCategory, egglessOnly]);
 
   return (
     <section id="menu" className="py-16 md:py-24 bg-[#FAF7F2]">
