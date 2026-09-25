@@ -95,6 +95,28 @@ export function InventoryProvider({ children }) {
       console.warn('SSE unavailable, falling back to local state sync.');
     }
 
+    // 3. Fallback Poll API every 2 seconds for guaranteed cross-device real-time price & catalog sync
+    const pollInterval = setInterval(() => {
+      fetch('/api/inventory')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setProducts((prev) => {
+              const currentStr = JSON.stringify(prev);
+              const newStr = JSON.stringify(data);
+              if (currentStr !== newStr) {
+                try {
+                  localStorage.setItem(INVENTORY_STORAGE_KEY, newStr);
+                } catch (e) {}
+                return data;
+              }
+              return prev;
+            });
+          }
+        })
+        .catch(() => {});
+    }, 2000);
+
     const handleStorage = (e) => {
       if (e.key === INVENTORY_STORAGE_KEY && e.newValue) {
         try {
@@ -127,6 +149,7 @@ export function InventoryProvider({ children }) {
 
     return () => {
       clearInterval(interval);
+      clearInterval(pollInterval);
       if (eventSource) eventSource.close();
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('inventory_updated', handleCustomSync);

@@ -6,6 +6,37 @@ function realtimeInventoryPlugin() {
   const storePath = path.resolve(process.cwd(), 'inventory-store.json');
   let sseClients = [];
 
+  // Auto-seed inventory-store.json from data.js if missing
+  const ensureStoreExists = () => {
+    if (!fs.existsSync(storePath)) {
+      try {
+        const dataPath = path.resolve(process.cwd(), 'src/data.js');
+        if (fs.existsSync(dataPath)) {
+          const content = fs.readFileSync(dataPath, 'utf-8');
+          const match = content.match(/export const products = (\[[\s\S]*?\]);/);
+          if (match && match[1]) {
+            const initial = new Function(`return ${match[1]}`)();
+            fs.writeFileSync(storePath, JSON.stringify(initial, null, 2), 'utf-8');
+            return initial;
+          }
+        }
+      } catch (e) {
+        console.error('Could not auto-seed inventory-store.json:', e);
+      }
+    }
+  };
+
+  ensureStoreExists();
+
+  // Heartbeat ping interval to prevent mobile browser SSE disconnects
+  setInterval(() => {
+    sseClients.forEach((res) => {
+      try {
+        res.write(': ping\n\n');
+      } catch (e) {}
+    });
+  }, 15000);
+
   const getStoredInventory = () => {
     try {
       if (fs.existsSync(storePath)) {
@@ -34,9 +65,7 @@ function realtimeInventoryPlugin() {
     sseClients.forEach((res) => {
       try {
         res.write(payload);
-      } catch (err) {
-        // ignore closed connection errors
-      }
+      } catch (err) {}
     });
   };
 
@@ -58,9 +87,10 @@ function realtimeInventoryPlugin() {
     if (url === '/api/inventory/stream') {
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Access-Control-Allow-Origin': '*',
+        'X-Accel-Buffering': 'no',
       });
 
       const current = getStoredInventory();
