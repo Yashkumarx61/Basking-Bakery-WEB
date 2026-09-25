@@ -110,35 +110,36 @@ export default function Navbar() {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl text-[#5C3D2E] hover:bg-amber-100/50 transition-colors"
+              className="md:hidden p-2.5 rounded-xl text-[#5C3D2E] hover:bg-amber-100/50 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden pb-4 animate-fade-in space-y-2 border-t border-amber-100 pt-2">
+          <div className="md:hidden pb-4 animate-fade-in space-y-2 border-t border-amber-100 pt-3">
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
                 openPincodeModal();
               }}
-              className="w-full flex items-center justify-between p-3 bg-amber-50 rounded-xl text-xs font-semibold text-[#5C3D2E] border border-amber-200"
+              className="w-full flex items-center justify-between p-3.5 bg-amber-50 rounded-2xl text-xs font-semibold text-[#5C3D2E] border border-amber-200 min-h-[44px]"
             >
               <span className="flex items-center gap-1.5">
-                <MapPin size={14} className="text-amber-600" />
-                Delivering to: {selectedLocation.name}
+                <MapPin size={15} className="text-amber-600 shrink-0" />
+                Delivering to: <strong className="text-amber-900">{selectedLocation.name}</strong>
               </span>
-              <span className="text-amber-700 underline">Change</span>
+              <span className="text-amber-800 font-bold underline">Change</span>
             </button>
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-2.5 px-3 text-[#2B1810] font-medium hover:bg-amber-100/30 rounded-xl transition-colors"
+                className="block py-3 px-4 text-[#2B1810] font-semibold text-sm hover:bg-amber-100/40 rounded-xl transition-colors min-h-[44px] flex items-center"
               >
                 {link.label}
               </a>
@@ -147,9 +148,9 @@ export default function Navbar() {
               href={getDirectWhatsAppURL()}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 bg-emerald-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+              className="flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-3 rounded-2xl text-sm transition-colors shadow-sm min-h-[44px]"
             >
-              <MessageCircle size={16} />
+              <MessageCircle size={18} />
               Chat on WhatsApp
             </a>
           </div>

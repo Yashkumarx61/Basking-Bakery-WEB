@@ -18,11 +18,10 @@ import {
   Trash2,
   AlertTriangle,
   Leaf,
-  Info,
 } from 'lucide-react';
 import { useInventory } from '../InventoryContext';
 import { categories } from '../data';
-import { formatPrice, validateImageFile, validateImageUrl } from '../utils';
+import { formatPrice, validateImageFile } from '../utils';
 import ImageWithFallback from './ImageWithFallback';
 import bakeryLogo from '../assets/basking-bakery-logo.png';
 
@@ -57,7 +56,7 @@ export default function AdminDashboard({ onBackToShop }) {
     category: 'signature-cakes',
     price: '',
     description: '',
-    dietaryTag: 'eggless', // 'eggless' | 'contains-egg'
+    dietaryTag: 'eggless',
     glutenFree: false,
     sugarFree: false,
     isAvailable: true,
@@ -73,6 +72,26 @@ export default function AdminDashboard({ onBackToShop }) {
   const [inlinePriceId, setInlinePriceId] = useState(null);
   const [inlinePriceValue, setInlinePriceValue] = useState('');
 
+  // Body scroll locking and Escape key dismiss for open modals
+  useEffect(() => {
+    const isAnyModalOpen = Boolean(editingProduct || isAddModalOpen || deletingProduct);
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setEditingProduct(null);
+          setIsAddModalOpen(false);
+          setDeletingProduct(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [editingProduct, isAddModalOpen, deletingProduct]);
+
   // Filtering products
   const filteredProducts = products.filter((p) => {
     const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
@@ -83,7 +102,7 @@ export default function AdminDashboard({ onBackToShop }) {
 
   // Calculate statistics
   const totalCount = products.length;
-  const availableCount = products.filter((p) => p.isAvailable).length;
+  const availableCount = products.filter((p) => p.isAvailable !== false).length;
   const outOfStockCount = totalCount - availableCount;
 
   // Open edit modal
@@ -92,7 +111,7 @@ export default function AdminDashboard({ onBackToShop }) {
     setEditForm({
       name: product.name,
       category: product.category,
-      isAvailable: product.isAvailable,
+      isAvailable: product.isAvailable !== false,
       image: product.image,
       description: product.description,
       variants: JSON.parse(JSON.stringify(product.variants)),
@@ -112,7 +131,7 @@ export default function AdminDashboard({ onBackToShop }) {
     if (file) {
       const validation = validateImageFile(file);
       if (!validation.valid) {
-        showToast(validation.error, 'error');
+        toast && toast(validation.error, 'error');
         return;
       }
 
@@ -132,7 +151,7 @@ export default function AdminDashboard({ onBackToShop }) {
     if (file) {
       const validation = validateImageFile(file);
       if (!validation.valid) {
-        showToast(validation.error, 'error');
+        toast && toast(validation.error, 'error');
         return;
       }
 
@@ -189,7 +208,6 @@ export default function AdminDashboard({ onBackToShop }) {
 
       setIsSubmittingAdd(false);
       setIsAddModalOpen(false);
-      // Reset Form
       setAddForm({
         name: '',
         category: 'signature-cakes',
@@ -235,11 +253,11 @@ export default function AdminDashboard({ onBackToShop }) {
   );
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] font-body selection:bg-amber-300 text-[#2B1810]">
+    <div className="min-h-screen min-h-svh min-h-dvh bg-[#FAF7F2] font-body selection:bg-amber-300 text-[#2B1810]">
       {/* Toast Feedback Banner */}
       {toast && (
-        <div className="fixed top-5 right-5 z-50 animate-bounce-subtle">
-          <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-sm font-bold text-white ${
+        <div className="fixed top-5 right-5 z-50 animate-bounce-subtle max-w-[90vw]">
+          <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-xs sm:text-sm font-bold text-white ${
             toast.type === 'error'
               ? 'bg-rose-600 border-rose-400'
               : toast.type === 'info'
@@ -253,17 +271,17 @@ export default function AdminDashboard({ onBackToShop }) {
       )}
 
       {/* Top Bar Header */}
-      <header className="sticky top-0 z-40 bg-[#2B1810] text-white shadow-lg">
+      <header className="sticky top-0 z-40 bg-[#2B1810] text-white shadow-lg pt-safe">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             {/* Logo & Portal Title */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-amber-400/40">
+              <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-amber-400/40 shrink-0">
                 <img src={bakeryLogo} alt="Basking Bakery" className="w-full h-full object-cover" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="font-display text-xl font-bold text-amber-100">
+                  <h1 className="font-display text-lg sm:text-xl font-bold text-amber-100">
                     Basking Bakery Inventory
                   </h1>
                   <span className="bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border border-amber-500/30">
@@ -277,25 +295,25 @@ export default function AdminDashboard({ onBackToShop }) {
             </div>
 
             {/* Header Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
               {/* + Add New Product Button */}
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#2B1810] font-bold text-xs sm:text-sm px-4 py-2.5 rounded-full shadow-md transition-all hover:scale-105 active:scale-95"
+                className="flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#2B1810] font-bold text-xs sm:text-sm px-4 py-2.5 rounded-full shadow-md transition-all min-h-[44px]"
               >
-                <PlusCircle size={16} /> + Add New Product
+                <PlusCircle size={16} /> + Add Product
               </button>
 
               <button
                 onClick={onBackToShop}
-                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-amber-100 text-xs font-semibold px-3.5 py-2 rounded-full border border-white/15 transition-all"
+                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-amber-100 text-xs font-semibold px-3.5 py-2.5 rounded-full border border-white/15 transition-all min-h-[44px]"
               >
                 <Eye size={14} /> Customer Menu
               </button>
 
               <button
                 onClick={logout}
-                className="flex items-center gap-1.5 bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold px-3.5 py-2 rounded-full transition-all shadow-sm"
+                className="flex items-center gap-1.5 bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-semibold px-3.5 py-2.5 rounded-full transition-all shadow-sm min-h-[44px]"
               >
                 <LogOut size={14} /> Sign Out
               </button>
@@ -305,74 +323,74 @@ export default function AdminDashboard({ onBackToShop }) {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-safe">
         {/* Stats Summary Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-2xl p-5 border border-amber-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center shrink-0 font-bold">
-              <Package size={22} />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 text-amber-800 rounded-2xl flex items-center justify-center shrink-0 font-bold">
+              <Package size={20} />
             </div>
             <div>
-              <span className="text-xs text-bakery-warmBrown font-medium block">Total Bakery Items</span>
-              <span className="text-2xl font-bold text-[#2B1810]">{totalCount}</span>
+              <span className="text-[11px] sm:text-xs text-bakery-warmBrown font-medium block">Total Items</span>
+              <span className="text-xl sm:text-2xl font-bold text-[#2B1810]">{totalCount}</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-emerald-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-2xl flex items-center justify-center shrink-0 font-bold">
-              <CheckCircle2 size={22} />
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-100 shadow-sm flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-100 text-emerald-800 rounded-2xl flex items-center justify-center shrink-0 font-bold">
+              <CheckCircle2 size={20} />
             </div>
             <div>
-              <span className="text-xs text-emerald-800 font-medium block">Available Now</span>
-              <span className="text-2xl font-bold text-emerald-900">{availableCount}</span>
+              <span className="text-[11px] sm:text-xs text-emerald-800 font-medium block">Available</span>
+              <span className="text-xl sm:text-2xl font-bold text-emerald-900">{availableCount}</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-rose-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-rose-100 text-rose-800 rounded-2xl flex items-center justify-center shrink-0 font-bold">
-              <XCircle size={22} />
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-rose-100 shadow-sm flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-rose-100 text-rose-800 rounded-2xl flex items-center justify-center shrink-0 font-bold">
+              <XCircle size={20} />
             </div>
             <div>
-              <span className="text-xs text-rose-800 font-medium block">Out of Stock</span>
-              <span className="text-2xl font-bold text-rose-900">{outOfStockCount}</span>
+              <span className="text-[11px] sm:text-xs text-rose-800 font-medium block">Sold Out</span>
+              <span className="text-xl sm:text-2xl font-bold text-rose-900">{outOfStockCount}</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 border border-amber-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center shrink-0 font-bold">
-              <Tag size={22} />
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center shrink-0 font-bold">
+              <Tag size={20} />
             </div>
             <div>
-              <span className="text-xs text-bakery-warmBrown font-medium block">Categories</span>
-              <span className="text-2xl font-bold text-[#2B1810]">{categories.length - 1}</span>
+              <span className="text-[11px] sm:text-xs text-bakery-warmBrown font-medium block">Categories</span>
+              <span className="text-xl sm:text-2xl font-bold text-[#2B1810]">{categories.length - 1}</span>
             </div>
           </div>
         </div>
 
         {/* Controls: Search, Filter, Add & Reset */}
-        <div className="bg-white rounded-3xl p-6 border border-amber-100 shadow-sm mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white rounded-3xl p-4 sm:p-6 border border-amber-100 shadow-sm mb-6 sm:mb-8 space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             {/* Search Bar */}
-            <div className="relative w-full md:w-80">
+            <div className="relative w-full sm:w-80">
               <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-bakery-warmBrown/60" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search items by name..."
-                className="w-full pl-10 pr-4 py-2.5 bg-bakery-cream/50 border border-amber-200 rounded-full text-xs sm:text-sm text-[#2B1810] placeholder:text-bakery-warmBrown/50 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                className="w-full pl-10 pr-4 py-2.5 bg-bakery-cream/50 border border-amber-200 rounded-full text-sm text-[#2B1810] placeholder:text-bakery-warmBrown/50 focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[44px]"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-bakery-warmBrown hover:text-[#2B1810]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-bakery-warmBrown hover:text-[#2B1810] p-1"
                 >
                   <X size={14} />
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
               {/* Reset Catalog Button */}
               <button
                 onClick={() => {
@@ -380,7 +398,7 @@ export default function AdminDashboard({ onBackToShop }) {
                     resetInventory();
                   }
                 }}
-                className="flex items-center gap-1.5 text-xs text-amber-800 hover:text-amber-950 font-semibold bg-amber-50 hover:bg-amber-100 px-4 py-2.5 rounded-full border border-amber-200 transition"
+                className="flex items-center gap-1.5 text-xs text-amber-800 hover:text-amber-950 font-semibold bg-amber-50 hover:bg-amber-100 px-4 py-2.5 rounded-full border border-amber-200 transition min-h-[44px]"
                 title="Reset inventory to original default state"
               >
                 <RotateCcw size={14} /> Reset Catalog Defaults
@@ -394,7 +412,7 @@ export default function AdminDashboard({ onBackToShop }) {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`text-xs px-4 py-2 rounded-full font-semibold whitespace-nowrap transition-all ${
+                className={`text-xs px-4 py-2.5 rounded-full font-semibold whitespace-nowrap transition-all min-h-[44px] flex items-center justify-center ${
                   selectedCategory === cat.id
                     ? 'bg-[#5C3D2E] text-white shadow-sm'
                     : 'bg-bakery-cream/40 text-bakery-warmBrown border border-amber-100 hover:bg-amber-50 hover:border-amber-300'
@@ -406,200 +424,290 @@ export default function AdminDashboard({ onBackToShop }) {
           </div>
         </div>
 
-        {/* Product Inventory Table */}
+        {/* Product Inventory Display */}
         <div className="bg-white rounded-3xl border border-amber-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-amber-100 flex flex-wrap items-center justify-between gap-4">
+          <div className="p-4 sm:p-6 border-b border-amber-100 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-lg font-bold text-[#2B1810]">
+              <h2 className="font-display text-base sm:text-lg font-bold text-[#2B1810]">
                 Product Catalog ({filteredProducts.length} Items)
               </h2>
               <p className="text-xs text-bakery-warmBrown/70">
-                Manage item availability, edit prices, update photos, or permanently remove products
+                Manage item availability, edit prices, update photos, or delete products
               </p>
             </div>
 
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-1.5 bg-[#5C3D2E] hover:bg-[#8B6F47] text-white text-xs font-bold px-4 py-2 rounded-full shadow-sm transition"
+              className="inline-flex items-center gap-1.5 bg-[#5C3D2E] hover:bg-[#8B6F47] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-sm transition min-h-[44px]"
             >
               <PlusCircle size={14} /> Add Product
             </button>
           </div>
 
           {filteredProducts.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-amber-50/50 text-[11px] uppercase tracking-wider text-amber-900 border-b border-amber-100 font-bold">
-                    <th className="py-3.5 px-6">Product Item</th>
-                    <th className="py-3.5 px-4">Category</th>
-                    <th className="py-3.5 px-4">Current Price</th>
-                    <th className="py-3.5 px-4">Stock Availability</th>
-                    <th className="py-3.5 px-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-amber-100/60 text-xs sm:text-sm">
-                  {filteredProducts.map((product) => {
-                    const isAvailable = product.isAvailable !== false;
-                    const primaryPrice = product.variants?.[0]?.price || 0;
+            <>
+              {/* DESKTOP TABLE VIEW (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-amber-50/50 text-[11px] uppercase tracking-wider text-amber-900 border-b border-amber-100 font-bold">
+                      <th className="py-3.5 px-6">Product Item</th>
+                      <th className="py-3.5 px-4">Category</th>
+                      <th className="py-3.5 px-4">Current Price</th>
+                      <th className="py-3.5 px-4">Stock Availability</th>
+                      <th className="py-3.5 px-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-100/60 text-xs sm:text-sm">
+                    {filteredProducts.map((product) => {
+                      const isAvailable = product.isAvailable !== false;
+                      const primaryPrice = product.variants?.[0]?.price || 0;
 
-                    return (
-                      <tr
-                        key={product.id}
-                        className={`hover:bg-amber-50/30 transition-colors ${
-                          !isAvailable ? 'bg-slate-50/70' : ''
-                        }`}
-                      >
-                        {/* Image Thumbnail & Product Name */}
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-amber-100">
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className={`w-full h-full object-cover ${
-                                  !isAvailable ? 'opacity-60 grayscale' : ''
+                      return (
+                        <tr
+                          key={product.id}
+                          className={`hover:bg-amber-50/30 transition-colors ${
+                            !isAvailable ? 'bg-slate-50/70' : ''
+                          }`}
+                        >
+                          {/* Image Thumbnail & Product Name */}
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-14 h-14 rounded-2xl overflow-hidden shrink-0 shadow-sm border border-amber-100 aspect-square">
+                                <ImageWithFallback
+                                  src={product.image}
+                                  alt={product.name}
+                                  className={`w-full h-full object-cover ${
+                                    !isAvailable ? 'opacity-60 grayscale' : ''
+                                  }`}
+                                />
+                                {!isAvailable && (
+                                  <span className="absolute inset-0 bg-black/40 flex items-center justify-center text-[9px] font-bold text-white text-center p-0.5 uppercase">
+                                    Sold Out
+                                  </span>
+                                )}
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-[#2B1810] text-sm leading-tight flex flex-wrap items-center gap-1.5">
+                                  {product.name}
+                                  {product.isEggless ? (
+                                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                                      Eggless
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                                      Contains Egg
+                                    </span>
+                                  )}
+                                  {product.glutenFree && (
+                                    <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded">
+                                      GF
+                                    </span>
+                                  )}
+                                  {product.sugarFree && (
+                                    <span className="text-[10px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
+                                      Sugar-Free
+                                    </span>
+                                  )}
+                                </h3>
+                                <p className="text-xs text-bakery-warmBrown/70 line-clamp-1 max-w-xs mt-0.5">
+                                  {product.description}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Category */}
+                          <td className="py-4 px-4 font-medium text-bakery-warmBrown capitalize">
+                            <span className="bg-amber-100/50 text-amber-900 text-xs px-2.5 py-1 rounded-full border border-amber-200/50">
+                              {product.category.replace('-', ' ')}
+                            </span>
+                          </td>
+
+                          {/* Price & Quick Edit */}
+                          <td className="py-4 px-4 font-bold text-[#2B1810]">
+                            {inlinePriceId === product.id ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs font-medium text-amber-800">₹</span>
+                                <input
+                                  type="number"
+                                  value={inlinePriceValue}
+                                  onChange={(e) => setInlinePriceValue(e.target.value)}
+                                  className="w-20 px-2 py-1 bg-white border border-amber-400 rounded text-sm font-bold focus:outline-none"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => handleSaveInlinePrice(product)}
+                                  className="p-1.5 text-emerald-700 hover:bg-emerald-100 rounded min-h-[36px]"
+                                  title="Save price"
+                                >
+                                  <Check size={16} />
+                                </button>
+                                <button
+                                  onClick={() => setInlinePriceId(null)}
+                                  className="p-1.5 text-rose-700 hover:bg-rose-100 rounded min-h-[36px]"
+                                  title="Cancel"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {formatPrice(primaryPrice)}
+                                  {product.variants.length > 1 && (
+                                    <span className="text-[10px] font-normal text-bakery-warmBrown/60 block">
+                                      ({product.variants.length} variants)
+                                    </span>
+                                  )}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    setInlinePriceId(product.id);
+                                    setInlinePriceValue(primaryPrice.toString());
+                                  }}
+                                  className="p-1.5 text-amber-700 hover:bg-amber-100 rounded-full transition min-h-[36px]"
+                                  title="Quick edit primary price"
+                                >
+                                  <Edit2 size={13} />
+                                </button>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Availability Toggle Switch */}
+                          <td className="py-4 px-4">
+                            <button
+                              onClick={() => toggleAvailability(product.id)}
+                              className={`flex items-center gap-2.5 px-3.5 py-2 rounded-full border text-xs font-bold transition-all shadow-sm min-h-[44px] ${
+                                isAvailable
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                                  : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'
+                              }`}
+                            >
+                              <span
+                                className={`w-3 h-3 rounded-full transition-all ${
+                                  isAvailable ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
                                 }`}
                               />
-                              {!isAvailable && (
-                                <span className="absolute inset-0 bg-black/40 flex items-center justify-center text-[9px] font-bold text-white text-center p-0.5 uppercase">
-                                  Sold Out
-                                </span>
-                              )}
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-[#2B1810] text-sm leading-tight flex flex-wrap items-center gap-1.5">
-                                {product.name}
-                                {product.isEggless ? (
-                                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                                    Eggless
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
-                                    Contains Egg
-                                  </span>
-                                )}
-                                {product.glutenFree && (
-                                  <span className="text-[10px] font-bold bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded">
-                                    GF
-                                  </span>
-                                )}
-                                {product.sugarFree && (
-                                  <span className="text-[10px] font-bold bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded">
-                                    Sugar-Free
-                                  </span>
-                                )}
-                              </h3>
-                              <p className="text-xs text-bakery-warmBrown/70 line-clamp-1 max-w-xs mt-0.5">
-                                {product.description}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
+                              <span>{isAvailable ? 'Available' : 'Sold Out / Disabled'}</span>
+                            </button>
+                          </td>
 
-                        {/* Category */}
-                        <td className="py-4 px-4 font-medium text-bakery-warmBrown capitalize">
-                          <span className="bg-amber-100/50 text-amber-900 text-xs px-2.5 py-1 rounded-full border border-amber-200/50">
-                            {product.category.replace('-', ' ')}
-                          </span>
-                        </td>
+                          {/* Actions */}
+                          <td className="py-4 px-6 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleOpenEditModal(product)}
+                                className="inline-flex items-center gap-1.5 bg-[#5C3D2E] hover:bg-[#8B6F47] text-white text-xs font-semibold px-3 py-2 rounded-full transition-all shadow-sm min-h-[40px]"
+                                title="Edit item details"
+                              >
+                                <Edit2 size={13} /> Edit
+                              </button>
 
-                        {/* Price & Quick Edit */}
-                        <td className="py-4 px-4 font-bold text-[#2B1810]">
-                          {inlinePriceId === product.id ? (
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs font-medium text-amber-800">₹</span>
-                              <input
-                                type="number"
-                                value={inlinePriceValue}
-                                onChange={(e) => setInlinePriceValue(e.target.value)}
-                                className="w-20 px-2 py-1 bg-white border border-amber-400 rounded text-xs font-bold focus:outline-none"
-                                autoFocus
-                              />
                               <button
-                                onClick={() => handleSaveInlinePrice(product)}
-                                className="p-1 text-emerald-700 hover:bg-emerald-100 rounded"
-                                title="Save price"
+                                onClick={() => setDeletingProduct(product)}
+                                className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-3 py-2 rounded-full transition-all min-h-[40px]"
+                                title="Permanently delete product"
                               >
-                                <Check size={16} />
-                              </button>
-                              <button
-                                onClick={() => setInlinePriceId(null)}
-                                className="p-1 text-rose-700 hover:bg-rose-100 rounded"
-                                title="Cancel"
-                              >
-                                <X size={16} />
+                                <Trash2 size={13} /> Delete
                               </button>
                             </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span>
-                                {formatPrice(primaryPrice)}
-                                {product.variants.length > 1 && (
-                                  <span className="text-[10px] font-normal text-bakery-warmBrown/60 block">
-                                    ({product.variants.length} variants)
-                                  </span>
-                                )}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  setInlinePriceId(product.id);
-                                  setInlinePriceValue(primaryPrice.toString());
-                                }}
-                                className="p-1 text-amber-700 hover:bg-amber-100 rounded-full transition"
-                                title="Quick edit primary price"
-                              >
-                                <Edit2 size={13} />
-                              </button>
-                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE STACKED CARDS VIEW (< 768px) */}
+              <div className="block md:hidden divide-y divide-amber-100 p-4 space-y-4">
+                {filteredProducts.map((product) => {
+                  const isAvailable = product.isAvailable !== false;
+                  const primaryPrice = product.variants?.[0]?.price || 0;
+
+                  return (
+                    <div
+                      key={product.id}
+                      className={`pt-4 first:pt-0 p-4 rounded-2xl bg-amber-50/30 border border-amber-100 space-y-3 ${
+                        !isAvailable ? 'opacity-80 bg-slate-50' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-amber-200 aspect-square">
+                          <ImageWithFallback
+                            src={product.image}
+                            alt={product.name}
+                            className={`w-full h-full object-cover ${!isAvailable ? 'opacity-60 grayscale' : ''}`}
+                          />
+                          {!isAvailable && (
+                            <span className="absolute inset-0 bg-black/50 flex items-center justify-center text-[9px] font-bold text-white uppercase text-center">
+                              Sold Out
+                            </span>
                           )}
-                        </td>
+                        </div>
 
-                        {/* Availability Toggle Switch */}
-                        <td className="py-4 px-4">
-                          <button
-                            onClick={() => toggleAvailability(product.id)}
-                            className={`flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all shadow-sm ${
-                              isAvailable
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                                : 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100'
-                            }`}
-                          >
-                            <span
-                              className={`w-3 h-3 rounded-full transition-all ${
-                                isAvailable ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
-                              }`}
-                            />
-                            <span>{isAvailable ? 'Available' : 'Sold Out / Disabled'}</span>
-                          </button>
-                        </td>
-
-                        {/* Actions (Edit & Delete) */}
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleOpenEditModal(product)}
-                              className="inline-flex items-center gap-1.5 bg-[#5C3D2E] hover:bg-[#8B6F47] text-white text-xs font-semibold px-3 py-1.5 rounded-full transition-all shadow-sm"
-                              title="Edit item details"
-                            >
-                              <Edit2 size={13} /> Edit
-                            </button>
-
-                            <button
-                              onClick={() => setDeletingProduct(product)}
-                              className="inline-flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-full transition-all"
-                              title="Permanently delete product"
-                            >
-                              <Trash2 size={13} /> Delete
-                            </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <h3 className="font-bold text-[#2B1810] text-sm leading-tight truncate">
+                              {product.name}
+                            </h3>
+                            <span className="text-xs font-extrabold text-[#2B1810]">
+                              {formatPrice(primaryPrice)}
+                            </span>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+
+                          <div className="flex flex-wrap items-center gap-1 mt-1">
+                            <span className="bg-amber-100 text-amber-900 text-[10px] px-2 py-0.5 rounded font-medium capitalize">
+                              {product.category.replace('-', ' ')}
+                            </span>
+                            {product.isEggless ? (
+                              <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+                                Eggless
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                                Contains Egg
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-amber-100/60">
+                        <button
+                          onClick={() => toggleAvailability(product.id)}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold transition-all min-h-[44px] ${
+                            isAvailable
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              : 'bg-rose-50 text-rose-800 border-rose-300'
+                          }`}
+                        >
+                          <span className={`w-2.5 h-2.5 rounded-full ${isAvailable ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                          <span>{isAvailable ? 'Available' : 'Sold Out'}</span>
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenEditModal(product)}
+                            className="bg-[#5C3D2E] text-white text-xs font-bold px-3 py-2 rounded-full min-h-[44px] flex items-center gap-1"
+                          >
+                            <Edit2 size={13} /> Edit
+                          </button>
+                          <button
+                            onClick={() => setDeletingProduct(product)}
+                            className="bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold px-3 py-2 rounded-full min-h-[44px] flex items-center gap-1"
+                          >
+                            <Trash2 size={13} /> Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           ) : (
             <div className="p-12 text-center text-bakery-warmBrown">
               <Package size={40} className="mx-auto text-amber-300 mb-2" />
@@ -614,19 +722,20 @@ export default function AdminDashboard({ onBackToShop }) {
 
       {/* FEATURE 1: Add New Bakery Product Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-100 p-6 sm:p-8 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in overscroll-contain">
+          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] max-h-[90dvh] overflow-y-auto cart-scroll shadow-2xl border border-amber-100 p-6 sm:p-8 relative touch-pan-y">
             {/* Close Button */}
             <button
               onClick={() => setIsAddModalOpen(false)}
-              className="absolute top-5 right-5 p-2 text-bakery-warmBrown hover:text-[#2B1810] bg-bakery-cream hover:bg-amber-100 rounded-full transition"
+              className="absolute top-5 right-5 p-2 text-bakery-warmBrown hover:text-[#2B1810] bg-bakery-cream hover:bg-amber-100 rounded-full transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Close add modal"
             >
               <X size={18} />
             </button>
 
             {/* Title */}
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-100">
-              <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center font-bold shadow-md">
+              <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center font-bold shadow-md shrink-0">
                 <PlusCircle size={22} />
               </div>
               <div>
@@ -653,7 +762,7 @@ export default function AdminDashboard({ onBackToShop }) {
                     value={addForm.name}
                     onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
                     placeholder="e.g. Belgian Dark Truffle Cake"
-                    className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                    className="w-full px-3.5 py-3 bg-bakery-cream/30 border border-amber-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none min-h-[44px]"
                   />
                 </div>
 
@@ -664,7 +773,7 @@ export default function AdminDashboard({ onBackToShop }) {
                   <select
                     value={addForm.category}
                     onChange={(e) => setAddForm({ ...addForm, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                    className="w-full px-3.5 py-3 bg-bakery-cream/30 border border-amber-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none min-h-[44px]"
                   >
                     {categories.filter((c) => c.id !== 'all').map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -690,7 +799,7 @@ export default function AdminDashboard({ onBackToShop }) {
                       value={addForm.price}
                       onChange={(e) => setAddForm({ ...addForm, price: e.target.value })}
                       placeholder="450"
-                      className="w-full pl-8 pr-3 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs sm:text-sm font-bold focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                      className="w-full pl-8 pr-3 py-3 bg-bakery-cream/30 border border-amber-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-amber-500/40 focus:outline-none min-h-[44px]"
                     />
                   </div>
                 </div>
@@ -702,7 +811,7 @@ export default function AdminDashboard({ onBackToShop }) {
                   <button
                     type="button"
                     onClick={() => setAddForm({ ...addForm, isAvailable: !addForm.isAvailable })}
-                    className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-between border transition ${
+                    className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-between border transition min-h-[44px] ${
                       addForm.isAvailable
                         ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
                         : 'bg-rose-50 text-rose-900 border-rose-300'
@@ -720,8 +829,8 @@ export default function AdminDashboard({ onBackToShop }) {
                   Dietary Classification <span className="text-rose-500">*</span>
                 </label>
                 
-                <div className="flex items-center gap-6 text-xs font-semibold text-[#2B1810]">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <div className="flex flex-wrap items-center gap-6 text-xs font-semibold text-[#2B1810]">
+                  <label className="flex items-center gap-2 cursor-pointer min-h-[40px]">
                     <input
                       type="radio"
                       name="dietaryTag"
@@ -735,7 +844,7 @@ export default function AdminDashboard({ onBackToShop }) {
                     </span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer min-h-[40px]">
                     <input
                       type="radio"
                       name="dietaryTag"
@@ -749,7 +858,7 @@ export default function AdminDashboard({ onBackToShop }) {
                 </div>
 
                 <div className="pt-2 border-t border-amber-200/50 flex flex-wrap items-center gap-4 text-xs font-medium">
-                  <label className="flex items-center gap-1.5 cursor-pointer">
+                  <label className="flex items-center gap-1.5 cursor-pointer min-h-[40px]">
                     <input
                       type="checkbox"
                       checked={addForm.glutenFree}
@@ -759,7 +868,7 @@ export default function AdminDashboard({ onBackToShop }) {
                     <span>Gluten-Free Option</span>
                   </label>
 
-                  <label className="flex items-center gap-1.5 cursor-pointer">
+                  <label className="flex items-center gap-1.5 cursor-pointer min-h-[40px]">
                     <input
                       type="checkbox"
                       checked={addForm.sugarFree}
@@ -778,9 +887,9 @@ export default function AdminDashboard({ onBackToShop }) {
                 </label>
 
                 <div className="flex items-center gap-4 mb-2">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden border border-amber-200 shrink-0 bg-slate-100 shadow-sm relative">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden border border-amber-200 shrink-0 bg-slate-100 shadow-sm relative aspect-square">
                     {addForm.imagePreview ? (
-                      <img src={addForm.imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <ImageWithFallback src={addForm.imagePreview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-bakery-warmBrown/50 text-[11px] font-semibold text-center p-1">
                         Square Preview
@@ -798,10 +907,10 @@ export default function AdminDashboard({ onBackToShop }) {
                         imagePreview: e.target.value,
                       })}
                       placeholder="Paste Image Web URL..."
-                      className="w-full px-3 py-2 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                      className="w-full px-3 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[44px]"
                     />
 
-                    <label className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition">
+                    <label className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-lg cursor-pointer transition min-h-[44px]">
                       <Upload size={14} /> Upload Image File (JPG, PNG, WebP)
                       <input
                         type="file"
@@ -824,7 +933,7 @@ export default function AdminDashboard({ onBackToShop }) {
                   value={addForm.description}
                   onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
                   placeholder="e.g. Handcrafted dark chocolate sponge with 55% cocoa ganache..."
-                  className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
                 />
               </div>
 
@@ -833,7 +942,7 @@ export default function AdminDashboard({ onBackToShop }) {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-5 py-2.5 text-xs font-bold text-bakery-warmBrown hover:bg-amber-100 rounded-full transition"
+                  className="px-5 py-2.5 text-xs font-bold text-bakery-warmBrown hover:bg-amber-100 rounded-full transition min-h-[44px]"
                 >
                   Cancel
                 </button>
@@ -841,7 +950,7 @@ export default function AdminDashboard({ onBackToShop }) {
                 <button
                   type="submit"
                   disabled={!isAddFormValid || isSubmittingAdd}
-                  className="btn-primary py-2.5 px-6 text-xs font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary py-2.5 px-6 text-xs font-bold shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                 >
                   {isSubmittingAdd ? (
                     <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -859,11 +968,12 @@ export default function AdminDashboard({ onBackToShop }) {
 
       {/* FEATURE 2: Delete Confirmation Modal */}
       {deletingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in overscroll-contain">
           <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-rose-100 p-6 relative">
             <button
               onClick={() => setDeletingProduct(null)}
-              className="absolute top-5 right-5 p-2 text-bakery-warmBrown hover:text-[#2B1810] bg-bakery-cream hover:bg-amber-100 rounded-full transition"
+              className="absolute top-5 right-5 p-2 text-bakery-warmBrown hover:text-[#2B1810] bg-bakery-cream hover:bg-amber-100 rounded-full transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Close delete modal"
             >
               <X size={18} />
             </button>
@@ -890,10 +1000,10 @@ export default function AdminDashboard({ onBackToShop }) {
 
             {/* Visual Item Preview Box */}
             <div className="bg-rose-50/70 rounded-2xl p-3.5 border border-rose-200/80 mb-6 flex items-center gap-3">
-              <img
+              <ImageWithFallback
                 src={deletingProduct.image}
                 alt={deletingProduct.name}
-                className="w-14 h-14 rounded-xl object-cover border border-rose-200 shrink-0"
+                className="w-14 h-14 rounded-xl object-cover border border-rose-200 shrink-0 aspect-square"
               />
               <div>
                 <h4 className="font-bold text-xs text-rose-950 line-clamp-1">{deletingProduct.name}</h4>
@@ -913,7 +1023,7 @@ export default function AdminDashboard({ onBackToShop }) {
               <button
                 type="button"
                 onClick={() => setDeletingProduct(null)}
-                className="px-4 py-2.5 text-xs font-bold text-bakery-warmBrown hover:bg-amber-100 rounded-full transition"
+                className="px-4 py-2.5 text-xs font-bold text-bakery-warmBrown hover:bg-amber-100 rounded-full transition min-h-[44px]"
               >
                 Cancel
               </button>
@@ -922,7 +1032,7 @@ export default function AdminDashboard({ onBackToShop }) {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={isSubmittingDelete}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-5 py-2.5 rounded-full shadow-lg transition flex items-center gap-2 disabled:opacity-75"
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-5 py-2.5 rounded-full shadow-lg transition flex items-center gap-2 disabled:opacity-75 min-h-[44px]"
               >
                 {isSubmittingDelete ? (
                   <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -939,19 +1049,20 @@ export default function AdminDashboard({ onBackToShop }) {
 
       {/* Edit Item Modal */}
       {editingProduct && editForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-100 p-6 sm:p-8 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in overscroll-contain">
+          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] max-h-[90dvh] overflow-y-auto cart-scroll shadow-2xl border border-amber-100 p-6 sm:p-8 relative touch-pan-y">
             {/* Close Button */}
             <button
               onClick={handleCloseEditModal}
-              className="absolute top-5 right-5 p-2 text-bakery-warmBrown hover:text-[#2B1810] bg-bakery-cream hover:bg-amber-100 rounded-full transition"
+              className="absolute top-5 right-5 p-2 text-bakery-warmBrown hover:text-[#2B1810] bg-bakery-cream hover:bg-amber-100 rounded-full transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Close edit modal"
             >
               <X size={18} />
             </button>
 
             {/* Title */}
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-100">
-              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-800 font-bold">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-800 font-bold shrink-0">
                 <Edit2 size={18} />
               </div>
               <div>
@@ -977,7 +1088,7 @@ export default function AdminDashboard({ onBackToShop }) {
                     required
                     value={editForm.name}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                    className="w-full px-3.5 py-3 bg-bakery-cream/30 border border-amber-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none min-h-[44px]"
                   />
                 </div>
 
@@ -988,7 +1099,7 @@ export default function AdminDashboard({ onBackToShop }) {
                   <select
                     value={editForm.category}
                     onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                    className="w-full px-3.5 py-3 bg-bakery-cream/30 border border-amber-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none min-h-[44px]"
                   >
                     {categories.filter((c) => c.id !== 'all').map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -1006,9 +1117,9 @@ export default function AdminDashboard({ onBackToShop }) {
                 </label>
                 
                 <div className="flex items-center gap-4 mb-3">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden border border-amber-200 shrink-0 bg-slate-100 shadow-sm relative">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden border border-amber-200 shrink-0 bg-slate-100 shadow-sm relative aspect-square">
                     {imagePreview ? (
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <ImageWithFallback src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-bakery-warmBrown">
                         <ImageIcon size={24} />
@@ -1025,10 +1136,10 @@ export default function AdminDashboard({ onBackToShop }) {
                         setImagePreview(e.target.value);
                       }}
                       placeholder="Paste Image URL..."
-                      className="w-full px-3 py-2 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                      className="w-full px-3 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/40 min-h-[44px]"
                     />
 
-                    <label className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer transition">
+                    <label className="inline-flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-lg cursor-pointer transition min-h-[44px]">
                       <Upload size={14} /> Upload Local Image File
                       <input
                         type="file"
@@ -1058,7 +1169,7 @@ export default function AdminDashboard({ onBackToShop }) {
                           setEditForm({ ...editForm, variants: updated });
                         }}
                         placeholder="Variant Label (e.g. 0.5 kg)"
-                        className="flex-1 px-3 py-1.5 bg-white border border-amber-200 rounded-lg text-xs font-medium"
+                        className="flex-1 px-3 py-2 bg-white border border-amber-200 rounded-lg text-sm font-medium min-h-[40px]"
                       />
                       <div className="flex items-center gap-1">
                         <span className="text-xs font-bold text-amber-900">₹</span>
@@ -1071,7 +1182,7 @@ export default function AdminDashboard({ onBackToShop }) {
                             setEditForm({ ...editForm, variants: updated });
                           }}
                           placeholder="Price"
-                          className="w-24 px-3 py-1.5 bg-white border border-amber-200 rounded-lg text-xs font-bold"
+                          className="w-24 px-3 py-2 bg-white border border-amber-200 rounded-lg text-sm font-bold min-h-[40px]"
                         />
                       </div>
                     </div>
@@ -1088,7 +1199,7 @@ export default function AdminDashboard({ onBackToShop }) {
                   rows={3}
                   value={editForm.description}
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-bakery-cream/30 border border-amber-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-amber-500/40 focus:outline-none"
                 />
               </div>
 
@@ -1106,7 +1217,7 @@ export default function AdminDashboard({ onBackToShop }) {
                 <button
                   type="button"
                   onClick={() => setEditForm({ ...editForm, isAvailable: !editForm.isAvailable })}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-xs transition-all shadow-sm ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-xs transition-all shadow-sm min-h-[44px] ${
                     editForm.isAvailable
                       ? 'bg-emerald-600 text-white'
                       : 'bg-rose-600 text-white'
@@ -1121,13 +1232,13 @@ export default function AdminDashboard({ onBackToShop }) {
                 <button
                   type="button"
                   onClick={handleCloseEditModal}
-                  className="px-5 py-2.5 text-xs font-bold text-bakery-warmBrown hover:bg-amber-100 rounded-full transition"
+                  className="px-5 py-2.5 text-xs font-bold text-bakery-warmBrown hover:bg-amber-100 rounded-full transition min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary py-2.5 px-6 text-xs font-bold shadow-lg"
+                  className="btn-primary py-2.5 px-6 text-xs font-bold shadow-lg min-h-[44px]"
                 >
                   Save Changes
                 </button>

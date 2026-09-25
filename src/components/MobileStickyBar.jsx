@@ -8,24 +8,24 @@ export default function MobileStickyBar() {
   if (itemCount === 0) return null;
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-bakery-lightGold p-3 shadow-2xl animate-slide-up">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-bakery-lightGold/60 p-3 pb-safe shadow-2xl animate-slide-up">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="relative bg-bakery-brown text-white p-2.5 rounded-full">
+          <div className="relative bg-bakery-brown text-white p-2.5 rounded-full shrink-0">
             <ShoppingBag size={20} />
             <span className="absolute -top-1 -right-1 bg-amber-400 text-bakery-darkText text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
               {itemCount}
             </span>
           </div>
           <div>
-            <p className="text-xs text-bakery-warmBrown font-medium">Total Amount</p>
+            <p className="text-[11px] text-bakery-warmBrown font-medium">Total Amount</p>
             <p className="text-base font-bold text-bakery-brown">{formatPrice(grandTotal)}</p>
           </div>
         </div>
 
         <button
           onClick={toggleCart}
-          className="btn-primary py-2.5 px-5 text-sm flex items-center gap-2"
+          className="btn-primary py-2.5 px-5 text-sm flex items-center gap-2 min-h-[44px]"
         >
           View Cart
           <ArrowRight size={16} />
