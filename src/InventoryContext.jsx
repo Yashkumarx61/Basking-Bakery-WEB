@@ -59,8 +59,42 @@ export function InventoryProvider({ children }) {
     }, 3500);
   }, []);
 
-  // Periodic Session Expiry Checking & Storage Listener for Multi-tab / View Sync
+  // Periodic Session Expiry Checking & Real-Time Cross-Device SSE Sync
   useEffect(() => {
+    // 1. Initial fetch from network server API if available
+    fetch('/api/inventory')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProducts(data);
+          try {
+            localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(data));
+          } catch (e) {}
+        }
+      })
+      .catch(() => {});
+
+    // 2. Real-time Server-Sent Events (SSE) listener for cross-device live sync (Laptop <-> Phone)
+    let eventSource;
+    try {
+      eventSource = new EventSource('/api/inventory/stream');
+      eventSource.onmessage = (event) => {
+        try {
+          const remoteProducts = JSON.parse(event.data);
+          if (Array.isArray(remoteProducts) && remoteProducts.length > 0) {
+            setProducts(remoteProducts);
+            try {
+              localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(remoteProducts));
+            } catch (e) {}
+          }
+        } catch (err) {
+          console.error('Failed to parse SSE inventory payload:', err);
+        }
+      };
+    } catch (e) {
+      console.warn('SSE unavailable, falling back to local state sync.');
+    }
+
     const handleStorage = (e) => {
       if (e.key === INVENTORY_STORAGE_KEY && e.newValue) {
         try {
@@ -93,12 +127,13 @@ export function InventoryProvider({ children }) {
 
     return () => {
       clearInterval(interval);
+      if (eventSource) eventSource.close();
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('inventory_updated', handleCustomSync);
     };
   }, [adminUser, showToast]);
 
-  // Sync products state to localStorage & broadcast event for live customer sync
+  // Sync products state to localStorage & broadcast event for real-time cross-device sync
   const saveProductsToStorage = (newProducts) => {
     setProducts(newProducts);
     try {
@@ -107,6 +142,15 @@ export function InventoryProvider({ children }) {
     } catch (e) {
       console.error('Failed to save inventory to localStorage:', e);
     }
+
+    // Broadcast update to server API for real-time cross-device sync (Laptop -> Phone)
+    try {
+      fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProducts),
+      }).catch((err) => console.warn('Network sync POST error:', err));
+    } catch (e) {}
   };
 
   // Auth Guard Helper - Checks if active request is authorized
