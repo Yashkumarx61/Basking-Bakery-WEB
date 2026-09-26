@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowDown, Sparkles, Clock, Truck, Leaf, ExternalLink } from 'lucide-react';
-import { GOOGLE_REVIEWS_URL } from '../data';
+import { ArrowDown, Sparkles, Clock, Truck, Leaf } from 'lucide-react';
 
 export default function Hero() {
   const [videoError, setVideoError] = useState(false);
@@ -62,30 +61,6 @@ export default function Hero() {
       {/* Hero Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-24 lg:py-32 w-full">
         <div className="max-w-3xl text-center md:text-left space-y-6 animate-fade-in">
-          {/* Eyebrow & Google Review Badge */}
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-            <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-1.5 shadow-md border border-amber-200/50">
-              <Sparkles size={14} className="text-amber-600" />
-              <span className="text-sm font-semibold text-bakery-darkText">
-                100% Eggless Options Available
-              </span>
-            </div>
-
-            {/* Clickable Google Rating Badge */}
-            <a
-              href={GOOGLE_REVIEWS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-md rounded-full px-4 py-1.5 shadow-md border border-amber-200/50 hover:scale-105 transition-all duration-200 group cursor-pointer"
-              title="View Basking Bakery Google Reviews"
-            >
-              <span className="text-sm">⭐</span>
-              <span className="text-sm font-bold text-bakery-brown">4.8 Rating</span>
-              <span className="text-xs text-bakery-warmBrown group-hover:underline">Google Reviews ↗</span>
-              <ExternalLink size={12} className="text-bakery-warmBrown opacity-60 group-hover:opacity-100 transition-opacity" />
-            </a>
-          </div>
-
           {/* Headline */}
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-amber-50 leading-tight drop-shadow-md">
             Freshly Baked
